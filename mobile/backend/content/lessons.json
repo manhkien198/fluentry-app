@@ -1,0 +1,338 @@
+[
+  {
+    "id": "lesson-1",
+    "title": "Confident Introductions",
+    "level": "Beginner",
+    "duration_minutes": 8,
+    "xp": 30,
+    "prompt": "Hello, my name is Anna and I love learning English every day."
+  },
+  {
+    "id": "lesson-2",
+    "title": "Travel Essentials",
+    "level": "Intermediate",
+    "duration_minutes": 10,
+    "xp": 45,
+    "prompt": "Could you tell me where the nearest train station is?"
+  },
+  {
+    "id": "lesson-3",
+    "title": "Work Presentation",
+    "level": "Advanced",
+    "duration_minutes": 12,
+    "xp": 60,
+    "prompt": "Our quarterly results exceeded expectations because the team executed consistently."
+  },
+  {
+    "id": "lesson-4",
+    "title": "Interview Confidence",
+    "level": "Intermediate",
+    "duration_minutes": 11,
+    "xp": 50,
+    "prompt": "I am excited about this role because it matches my experience and long-term goals."
+  },
+  {
+    "id": "lesson-5",
+    "title": "Daily Small Talk",
+    "level": "Beginner",
+    "duration_minutes": 7,
+    "xp": 28,
+    "prompt": "The weather is nice today, so I plan to walk to the coffee shop after lunch."
+  },
+  {
+    "id": "lesson-6",
+    "title": "Customer Support Clarity",
+    "level": "Advanced",
+    "duration_minutes": 13,
+    "xp": 65,
+    "prompt": "I understand your concern and I will resolve this issue as quickly as possible."
+  },
+  {
+    "id": "lesson-7",
+    "title": "Morning Routine Basics",
+    "level": "Beginner",
+    "duration_minutes": 6,
+    "xp": 24,
+    "prompt": "I usually wake up at seven, drink water, and review my schedule for the day."
+  },
+  {
+    "id": "lesson-8",
+    "title": "Ordering Food Clearly",
+    "level": "Beginner",
+    "duration_minutes": 8,
+    "xp": 30,
+    "prompt": "I would like a chicken salad and a glass of orange juice, please."
+  },
+  {
+    "id": "lesson-9",
+    "title": "Project Update Meeting",
+    "level": "Intermediate",
+    "duration_minutes": 10,
+    "xp": 46,
+    "prompt": "We completed the first milestone and we are now preparing the integration tests."
+  },
+  {
+    "id": "lesson-10",
+    "title": "Negotiation Phrases",
+    "level": "Intermediate",
+    "duration_minutes": 11,
+    "xp": 52,
+    "prompt": "Could we revisit the timeline and discuss a solution that works for both teams."
+  },
+  {
+    "id": "lesson-11",
+    "title": "Executive Briefing",
+    "level": "Advanced",
+    "duration_minutes": 14,
+    "xp": 70,
+    "prompt": "Our strategic priorities require disciplined execution, transparent reporting, and rapid risk mitigation."
+  },
+  {
+    "id": "lesson-12",
+    "title": "Crisis Response Communication",
+    "level": "Advanced",
+    "duration_minutes": 15,
+    "xp": 74,
+    "prompt": "We acknowledge the incident, we have contained the impact, and we are deploying corrective actions immediately."
+  },
+  {
+    "id": "lesson-13",
+    "title": "At the Pharmacy",
+    "level": "Beginner",
+    "duration_minutes": 7,
+    "xp": 26,
+    "prompt": "I have a sore throat and a headache, so I need medicine for cold symptoms."
+  },
+  {
+    "id": "lesson-14",
+    "title": "Weekend Plans",
+    "level": "Beginner",
+    "duration_minutes": 6,
+    "xp": 24,
+    "prompt": "This weekend I will visit my family, cook dinner, and watch a movie together."
+  },
+  {
+    "id": "lesson-15",
+    "title": "Product Demo Pitch",
+    "level": "Intermediate",
+    "duration_minutes": 10,
+    "xp": 48,
+    "prompt": "Our product simplifies daily workflows and reduces manual errors across teams."
+  },
+  {
+    "id": "lesson-16",
+    "title": "Handling Feedback",
+    "level": "Intermediate",
+    "duration_minutes": 11,
+    "xp": 52,
+    "prompt": "Thank you for the feedback; we will prioritize the key issues and share an update soon."
+  },
+  {
+    "id": "lesson-17",
+    "title": "Board Meeting Summary",
+    "level": "Advanced",
+    "duration_minutes": 14,
+    "xp": 72,
+    "prompt": "Revenue diversification remains critical as we navigate market volatility and regulatory uncertainty."
+  },
+  {
+    "id": "lesson-18",
+    "title": "Incident Postmortem",
+    "level": "Advanced",
+    "duration_minutes": 15,
+    "xp": 76,
+    "prompt": "The root cause analysis identified cascading failures, and we have implemented long-term corrective safeguards."
+  },
+  {
+    "id": "lesson-19",
+    "title": "Shopping Questions",
+    "level": "Beginner",
+    "duration_minutes": 7,
+    "xp": 26,
+    "prompt": "Excuse me, how much is this shirt, and do you have it in a larger size?"
+  },
+  {
+    "id": "lesson-20",
+    "title": "Airport Check-in",
+    "level": "Beginner",
+    "duration_minutes": 8,
+    "xp": 30,
+    "prompt": "I would like to check in for my flight and confirm my seat near the window."
+  },
+  {
+    "id": "lesson-21",
+    "title": "Sprint Planning Update",
+    "level": "Intermediate",
+    "duration_minutes": 10,
+    "xp": 48,
+    "prompt": "For the next sprint, we will prioritize high-impact tasks and reduce carry-over work."
+  },
+  {
+    "id": "lesson-22",
+    "title": "Client Follow-up Call",
+    "level": "Intermediate",
+    "duration_minutes": 11,
+    "xp": 52,
+    "prompt": "I am following up to confirm the revised scope and expected delivery timeline."
+  },
+  {
+    "id": "lesson-23",
+    "title": "Quarterly Risk Review",
+    "level": "Advanced",
+    "duration_minutes": 14,
+    "xp": 72,
+    "prompt": "We must reassess operational exposure and establish mitigation owners for each critical dependency."
+  },
+  {
+    "id": "lesson-24",
+    "title": "Regulatory Briefing",
+    "level": "Advanced",
+    "duration_minutes": 15,
+    "xp": 78,
+    "prompt": "The proposed regulation introduces compliance obligations that require immediate policy and process adjustments."
+  },
+  {
+    "id": "lesson-25",
+    "title": "Asking for Directions",
+    "level": "Beginner",
+    "duration_minutes": 7,
+    "xp": 26,
+    "prompt": "Could you tell me how to get to the city museum from this station?"
+  },
+  {
+    "id": "lesson-26",
+    "title": "Doctor Appointment",
+    "level": "Beginner",
+    "duration_minutes": 8,
+    "xp": 30,
+    "prompt": "I have had a fever since yesterday and I would like to book an appointment."
+  },
+  {
+    "id": "lesson-27",
+    "title": "Team Retrospective",
+    "level": "Intermediate",
+    "duration_minutes": 10,
+    "xp": 48,
+    "prompt": "In this sprint retrospective, we identified blockers and agreed on clear ownership."
+  },
+  {
+    "id": "lesson-28",
+    "title": "Sales Discovery Call",
+    "level": "Intermediate",
+    "duration_minutes": 11,
+    "xp": 53,
+    "prompt": "I would like to understand your priorities before proposing a solution."
+  },
+  {
+    "id": "lesson-29",
+    "title": "Investor Q&A",
+    "level": "Advanced",
+    "duration_minutes": 14,
+    "xp": 73,
+    "prompt": "Our long-term strategy balances disciplined capital allocation with resilient revenue growth."
+  },
+  {
+    "id": "lesson-30",
+    "title": "C-Level Incident Brief",
+    "level": "Advanced",
+    "duration_minutes": 15,
+    "xp": 79,
+    "prompt": "We contained the disruption, restored core services, and launched a comprehensive corrective program."
+  },
+  {
+    "id": "lesson-31",
+    "title": "Hotel Check-in",
+    "level": "Beginner",
+    "duration_minutes": 7,
+    "xp": 27,
+    "prompt": "I have a reservation for two nights and I would like a quiet room, please."
+  },
+  {
+    "id": "lesson-32",
+    "title": "Public Transport Help",
+    "level": "Beginner",
+    "duration_minutes": 8,
+    "xp": 30,
+    "prompt": "Which bus should I take to the central market, and where do I get off?"
+  },
+  {
+    "id": "lesson-33",
+    "title": "Feature Prioritization",
+    "level": "Intermediate",
+    "duration_minutes": 10,
+    "xp": 49,
+    "prompt": "We should prioritize the features that deliver immediate customer value and low implementation risk."
+  },
+  {
+    "id": "lesson-34",
+    "title": "Recruiter Follow-up",
+    "level": "Intermediate",
+    "duration_minutes": 11,
+    "xp": 54,
+    "prompt": "Thank you for your time today, and I look forward to discussing the next steps."
+  },
+  {
+    "id": "lesson-35",
+    "title": "Strategic Roadmap Defense",
+    "level": "Advanced",
+    "duration_minutes": 14,
+    "xp": 74,
+    "prompt": "Our roadmap assumptions remain valid, but we must accelerate execution against emerging competitive pressure."
+  },
+  {
+    "id": "lesson-36",
+    "title": "Global Stakeholder Update",
+    "level": "Advanced",
+    "duration_minutes": 15,
+    "xp": 80,
+    "prompt": "We aligned regional teams on shared milestones, established governance cadence, and clarified decision accountability."
+  },
+  {
+    "id": "lesson-37",
+    "title": "Grocery Store Conversation",
+    "level": "Beginner",
+    "duration_minutes": 7,
+    "xp": 27,
+    "prompt": "I need fresh vegetables, whole milk, and a loaf of bread for dinner tonight."
+  },
+  {
+    "id": "lesson-38",
+    "title": "Gym Membership Questions",
+    "level": "Beginner",
+    "duration_minutes": 8,
+    "xp": 31,
+    "prompt": "Could you explain the monthly membership options and tell me if classes are included?"
+  },
+  {
+    "id": "lesson-39",
+    "title": "Product Launch Sync",
+    "level": "Intermediate",
+    "duration_minutes": 10,
+    "xp": 50,
+    "prompt": "Before launch, we need alignment across marketing, support, and engineering teams."
+  },
+  {
+    "id": "lesson-40",
+    "title": "Cross-Team Handoff",
+    "level": "Intermediate",
+    "duration_minutes": 11,
+    "xp": 55,
+    "prompt": "Let us review responsibilities and ensure the handoff timeline is realistic."
+  },
+  {
+    "id": "lesson-41",
+    "title": "Capital Allocation Review",
+    "level": "Advanced",
+    "duration_minutes": 14,
+    "xp": 75,
+    "prompt": "Prudent capital allocation requires balancing short-term operating needs against long-term strategic investments."
+  },
+  {
+    "id": "lesson-42",
+    "title": "Enterprise Risk Escalation",
+    "level": "Advanced",
+    "duration_minutes": 15,
+    "xp": 81,
+    "prompt": "We escalated unresolved dependencies, assigned executive owners, and implemented strict remediation milestones."
+  }
+]

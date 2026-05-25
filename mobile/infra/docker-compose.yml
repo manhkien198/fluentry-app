@@ -1,0 +1,43 @@
+version: '3.9'
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../infra/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: development
+      PORT: 8000
+      UPLOAD_DIR: /app/app/data/uploads
+      SESSION_DIR: /app/app/data/sessions
+      MFA_ENABLED: "false"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - ../backend:/app
+    depends_on:
+      - redis
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  worker:
+    build:
+      context: ../backend
+      dockerfile: ../infra/Dockerfile.backend
+    environment:
+      APP_ENV: development
+      UPLOAD_DIR: /app/app/data/uploads
+      SESSION_DIR: /app/app/data/sessions
+      MFA_ENABLED: "false"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - ../backend:/app
+    depends_on:
+      - redis
+    command: celery -A app.worker.celery_app worker --loglevel=INFO

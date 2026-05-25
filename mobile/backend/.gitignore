@@ -1,0 +1,20 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+.mfa-venv/
+
+# Local env
+.env
+.env.*
+!.env.example
+
+# Runtime data
+app/data/uploads/*
+app/data/sessions/*
+!app/data/.gitkeep
+
+# OS files
+.DS_Store
