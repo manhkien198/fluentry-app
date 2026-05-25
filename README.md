@@ -51,6 +51,10 @@ Fluentry is a cross-platform mobile pronunciation coaching app inspired by ELSA.
 - [Deployment plan](docs/deployment.md)
 - [Roadmap](docs/roadmap.md)
 
+- [SonarQube setup](docs/sonarqube.md)
+- [Analytics taxonomy](docs/analytics-taxonomy.md)
+- [Go-live checklist](docs/go-live-checklist.md)
+
 ## Quick start
 ### Mobile
 1. `cd mobile`
@@ -62,7 +66,7 @@ For iOS simulator and web, `localhost` is fine. For a physical phone, set `EXPO_
 
 The result screen now renders backend analysis data, including alignment status, estimated duration, and a phoneme preview block.
 
-A new in-app Settings screen lets you inspect the active environment and temporarily override the API base URL for simulator, device, or deployed backend testing.
+The app uses environment-only API configuration (`EXPO_PUBLIC_API_BASE_URL`) and no in-app API override.
 
 ### Backend
 1. `cd backend`
@@ -70,6 +74,8 @@ A new in-app Settings screen lets you inspect the active environment and tempora
 3. `python3 -m venv .venv`
 4. `.venv/bin/pip install -e .`
 5. `PYTHONPATH=$(pwd) .venv/bin/uvicorn app.main:app --reload`
+
+For production, set a strong `JWT_SECRET` (minimum 32 characters), explicit `CORS_ALLOW_ORIGINS`, `APP_ENV=production`, and enable SSO signature verification with provider audiences.
 
 Backend v1 now persists session metadata and uploaded audio under `app/data/` for local development.
 
@@ -80,3 +86,14 @@ Backend v1 now persists session metadata and uploaded audio under `app/data/` fo
 
 ## Notes
 The machine used for scaffolding did not have Flutter installed, so the project was bootstrapped with Expo React Native to keep cross-platform delivery fast and deployable.
+
+## Engineering standard
+- All delivered code must be production-grade and complete (not prototype-grade).
+- Every behavior change must include meaningful automated tests (backend and/or mobile) for normal flow and critical failure paths.
+- UI changes must preserve accessibility/contrast and consistent interaction states (pressed, disabled, loading).
+- Network-dependent flows must include timeout handling, retry strategy, and user-facing recovery UX.
+
+
+## Quality scanning
+- SonarQube configuration is provided at `sonar-project.properties`.
+- Setup and run instructions: `docs/sonarqube.md`.

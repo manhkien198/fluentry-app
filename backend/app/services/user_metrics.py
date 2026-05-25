@@ -4,8 +4,9 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app.services.session_store import list_sessions
-from app.api.lessons import LESSONS
+from app.services.lesson_store import list_lessons
 
+LESSONS = list_lessons()
 LESSON_TITLE_BY_ID = {lesson.id: lesson.title for lesson in LESSONS}
 LESSON_PROMPT_BY_ID = {lesson.id: lesson.prompt for lesson in LESSONS}
 LESSON_XP_BY_ID = {lesson.id: lesson.xp for lesson in LESSONS}
@@ -67,6 +68,12 @@ def _extract_weak_sounds_from_result(result: dict[str, Any]) -> list[str]:
 def _safe_str(value: Any, default: str = "") -> str:
     try:
         return str(value)
+    except Exception:
+        return default
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
     except Exception:
         return default
 
@@ -146,8 +153,8 @@ def compute_user_history_items(done_sessions: list[dict[str, Any]], limit: int =
     return items
 
 
-def compute_user_progress_payload() -> dict[str, Any]:
-    sessions = list_sessions()
+def compute_user_progress_payload(user_id: str | None = None) -> dict[str, Any]:
+    sessions = list_sessions(user_id=user_id)
     done_sessions = [s for s in sessions if s.get("score_status") == "done" and s.get("score_result")]
     done_sessions.sort(key=lambda s: s.get("updated_at") or s.get("created_at") or "")
 
@@ -209,8 +216,8 @@ def compute_user_progress_payload() -> dict[str, Any]:
     return payload
 
 
-def compute_user_history_payload(limit: int = 20) -> dict[str, Any]:
-    sessions = list_sessions()
+def compute_user_history_payload(limit: int = 20, user_id: str | None = None) -> dict[str, Any]:
+    sessions = list_sessions(user_id=user_id)
     done_sessions = [s for s in sessions if s.get("score_status") == "done" and s.get("score_result")]
     done_sessions.sort(key=lambda s: s.get("updated_at") or s.get("created_at") or "", reverse=True)
 

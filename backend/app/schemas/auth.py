@@ -14,4 +14,23 @@ class UserProfile(BaseModel):
 
 class AuthResponse(BaseModel):
     access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
     user: UserProfile
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+class SSORequest(BaseModel):
+    provider: str
+    id_token: str
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
