@@ -1,0 +1,394 @@
+[
+  {
+    "id": "drill-th-min-1",
+    "sound": "TH",
+    "mode": "minimal_pairs",
+    "title": "thin / tin",
+    "prompt": "thin",
+    "lesson_id": "lesson-1"
+  },
+  {
+    "id": "drill-th-min-2",
+    "sound": "TH",
+    "mode": "minimal_pairs",
+    "title": "thank / tank",
+    "prompt": "thank",
+    "lesson_id": "lesson-1"
+  },
+  {
+    "id": "drill-th-sent-1",
+    "sound": "TH",
+    "mode": "sentences",
+    "title": "Airflow steady",
+    "prompt": "I think this is the best one.",
+    "lesson_id": "lesson-1"
+  },
+  {
+    "id": "drill-r-min-1",
+    "sound": "R",
+    "mode": "minimal_pairs",
+    "title": "right / light",
+    "prompt": "right",
+    "lesson_id": "lesson-1"
+  },
+  {
+    "id": "drill-r-sent-1",
+    "sound": "R",
+    "mode": "sentences",
+    "title": "Keep R consistent",
+    "prompt": "I really like reading.",
+    "lesson_id": "lesson-1"
+  },
+  {
+    "id": "drill-l-words-1",
+    "sound": "L",
+    "mode": "words",
+    "title": "Clear tongue contact",
+    "prompt": "light",
+    "lesson_id": "lesson-1"
+  },
+  {
+    "id": "drill-l-sent-1",
+    "sound": "L",
+    "mode": "sentences",
+    "title": "Crisp L",
+    "prompt": "Let’s learn a little every day.",
+    "lesson_id": "lesson-1"
+  },
+  {
+    "id": "drill-th-words-2",
+    "sound": "TH",
+    "mode": "words",
+    "title": "TH precision",
+    "prompt": "thirty three thinkers",
+    "lesson_id": "lesson-4"
+  },
+  {
+    "id": "drill-th-sent-2",
+    "sound": "TH",
+    "mode": "sentences",
+    "title": "TH in interview answers",
+    "prompt": "I think this position fits my strengths.",
+    "lesson_id": "lesson-4"
+  },
+  {
+    "id": "drill-r-words-2",
+    "sound": "R",
+    "mode": "words",
+    "title": "R control set",
+    "prompt": "career, role, growth",
+    "lesson_id": "lesson-6"
+  },
+  {
+    "id": "drill-r-sent-2",
+    "sound": "R",
+    "mode": "sentences",
+    "title": "Customer reassurance",
+    "prompt": "I will resolve your request right away.",
+    "lesson_id": "lesson-6"
+  },
+  {
+    "id": "drill-l-min-1",
+    "sound": "L",
+    "mode": "minimal_pairs",
+    "title": "light / right",
+    "prompt": "light",
+    "lesson_id": "lesson-5"
+  },
+  {
+    "id": "drill-l-sent-2",
+    "sound": "L",
+    "mode": "sentences",
+    "title": "Daily small talk flow",
+    "prompt": "I like walking after lunch.",
+    "lesson_id": "lesson-5"
+  },
+  {
+    "id": "drill-th-words-3",
+    "sound": "TH",
+    "mode": "words",
+    "title": "Beginner TH routine",
+    "prompt": "think, thank, three",
+    "lesson_id": "lesson-7"
+  },
+  {
+    "id": "drill-l-words-2",
+    "sound": "L",
+    "mode": "words",
+    "title": "Beginner L clarity",
+    "prompt": "lunch, glass, please",
+    "lesson_id": "lesson-8"
+  },
+  {
+    "id": "drill-r-sent-3",
+    "sound": "R",
+    "mode": "sentences",
+    "title": "Meeting progress report",
+    "prompt": "We are preparing reports for the next review.",
+    "lesson_id": "lesson-9"
+  },
+  {
+    "id": "drill-th-sent-3",
+    "sound": "TH",
+    "mode": "sentences",
+    "title": "Negotiation rhythm",
+    "prompt": "Could we discuss this timeline together?",
+    "lesson_id": "lesson-10"
+  },
+  {
+    "id": "drill-r-words-3",
+    "sound": "R",
+    "mode": "words",
+    "title": "Advanced R precision",
+    "prompt": "priority, transparent, risk",
+    "lesson_id": "lesson-11"
+  },
+  {
+    "id": "drill-l-sent-3",
+    "sound": "L",
+    "mode": "sentences",
+    "title": "Advanced response flow",
+    "prompt": "We will deploy corrective actions immediately.",
+    "lesson_id": "lesson-12"
+  },
+  {
+    "id": "drill-th-words-4",
+    "sound": "TH",
+    "mode": "words",
+    "title": "Pharmacy TH words",
+    "prompt": "throat, healthy, therapy",
+    "lesson_id": "lesson-13"
+  },
+  {
+    "id": "drill-l-sent-4",
+    "sound": "L",
+    "mode": "sentences",
+    "title": "Weekend linking",
+    "prompt": "I will visit my family this weekend.",
+    "lesson_id": "lesson-14"
+  },
+  {
+    "id": "drill-r-words-4",
+    "sound": "R",
+    "mode": "words",
+    "title": "Product R set",
+    "prompt": "product, errors, workflows",
+    "lesson_id": "lesson-15"
+  },
+  {
+    "id": "drill-th-sent-4",
+    "sound": "TH",
+    "mode": "sentences",
+    "title": "Feedback thought groups",
+    "prompt": "Thank you for the thoughtful feedback.",
+    "lesson_id": "lesson-16"
+  },
+  {
+    "id": "drill-r-sent-4",
+    "sound": "R",
+    "mode": "sentences",
+    "title": "Boardroom R clarity",
+    "prompt": "Revenue remains a priority for our strategy.",
+    "lesson_id": "lesson-17"
+  },
+  {
+    "id": "drill-l-words-3",
+    "sound": "L",
+    "mode": "words",
+    "title": "Postmortem L control",
+    "prompt": "analysis, failure, long-term",
+    "lesson_id": "lesson-18"
+  },
+  {
+    "id": "drill-th-sent-5",
+    "sound": "TH",
+    "mode": "sentences",
+    "title": "Shopping TH phrase",
+    "prompt": "Do you have this in another size?",
+    "lesson_id": "lesson-19"
+  },
+  {
+    "id": "drill-r-words-5",
+    "sound": "R",
+    "mode": "words",
+    "title": "Airport R set",
+    "prompt": "boarding, carry-on, reservation",
+    "lesson_id": "lesson-20"
+  },
+  {
+    "id": "drill-l-sent-5",
+    "sound": "L",
+    "mode": "sentences",
+    "title": "Planning linking",
+    "prompt": "We will prioritize the backlog for this sprint.",
+    "lesson_id": "lesson-21"
+  },
+  {
+    "id": "drill-r-sent-5",
+    "sound": "R",
+    "mode": "sentences",
+    "title": "Follow-up clarity",
+    "prompt": "I am confirming the revised requirements today.",
+    "lesson_id": "lesson-22"
+  },
+  {
+    "id": "drill-th-words-5",
+    "sound": "TH",
+    "mode": "words",
+    "title": "Risk review TH terms",
+    "prompt": "threat, growth, pathways",
+    "lesson_id": "lesson-23"
+  },
+  {
+    "id": "drill-l-sent-6",
+    "sound": "L",
+    "mode": "sentences",
+    "title": "Regulatory flow",
+    "prompt": "The policy update will align all compliance controls.",
+    "lesson_id": "lesson-24"
+  },
+  {
+    "id": "drill-r-words-6",
+    "sound": "R",
+    "mode": "words",
+    "title": "Direction R words",
+    "prompt": "right, around, road",
+    "lesson_id": "lesson-25"
+  },
+  {
+    "id": "drill-th-words-6",
+    "sound": "TH",
+    "mode": "words",
+    "title": "Health TH words",
+    "prompt": "throat, therapy, healthy",
+    "lesson_id": "lesson-26"
+  },
+  {
+    "id": "drill-l-sent-7",
+    "sound": "L",
+    "mode": "sentences",
+    "title": "Retrospective linking",
+    "prompt": "We will align ownership and close blockers quickly.",
+    "lesson_id": "lesson-27"
+  },
+  {
+    "id": "drill-r-sent-6",
+    "sound": "R",
+    "mode": "sentences",
+    "title": "Discovery rhythm",
+    "prompt": "I would like to review your priorities first.",
+    "lesson_id": "lesson-28"
+  },
+  {
+    "id": "drill-th-sent-6",
+    "sound": "TH",
+    "mode": "sentences",
+    "title": "Investor thought groups",
+    "prompt": "Our strategy supports growth and resilience.",
+    "lesson_id": "lesson-29"
+  },
+  {
+    "id": "drill-r-words-7",
+    "sound": "R",
+    "mode": "words",
+    "title": "Incident response R set",
+    "prompt": "restored, corrective, program",
+    "lesson_id": "lesson-30"
+  },
+  {
+    "id": "drill-l-sent-8",
+    "sound": "L",
+    "mode": "sentences",
+    "title": "Hotel check-in flow",
+    "prompt": "I would like a quiet room for two nights.",
+    "lesson_id": "lesson-31"
+  },
+  {
+    "id": "drill-th-sent-7",
+    "sound": "TH",
+    "mode": "sentences",
+    "title": "Transport TH phrase",
+    "prompt": "Which bus should I take to the market?",
+    "lesson_id": "lesson-32"
+  },
+  {
+    "id": "drill-r-sent-7",
+    "sound": "R",
+    "mode": "sentences",
+    "title": "Prioritization rhythm",
+    "prompt": "We should prioritize low-risk, high-value work.",
+    "lesson_id": "lesson-33"
+  },
+  {
+    "id": "drill-l-words-4",
+    "sound": "L",
+    "mode": "words",
+    "title": "Recruiter L set",
+    "prompt": "look, follow, discuss",
+    "lesson_id": "lesson-34"
+  },
+  {
+    "id": "drill-th-words-7",
+    "sound": "TH",
+    "mode": "words",
+    "title": "Roadmap TH precision",
+    "prompt": "growth, thoughtful, pathway",
+    "lesson_id": "lesson-35"
+  },
+  {
+    "id": "drill-r-sent-8",
+    "sound": "R",
+    "mode": "sentences",
+    "title": "Stakeholder report",
+    "prompt": "Regional leaders reviewed the shared roadmap.",
+    "lesson_id": "lesson-36"
+  },
+  {
+    "id": "drill-l-words-5",
+    "sound": "L",
+    "mode": "words",
+    "title": "Grocery L clarity",
+    "prompt": "milk, loaf, vegetables",
+    "lesson_id": "lesson-37"
+  },
+  {
+    "id": "drill-th-words-8",
+    "sound": "TH",
+    "mode": "words",
+    "title": "Membership TH set",
+    "prompt": "monthly, healthy, thirty",
+    "lesson_id": "lesson-38"
+  },
+  {
+    "id": "drill-r-sent-9",
+    "sound": "R",
+    "mode": "sentences",
+    "title": "Launch readiness",
+    "prompt": "Before release, we review all readiness criteria.",
+    "lesson_id": "lesson-39"
+  },
+  {
+    "id": "drill-l-sent-9",
+    "sound": "L",
+    "mode": "sentences",
+    "title": "Handoff flow",
+    "prompt": "Let us align the handoff timeline clearly.",
+    "lesson_id": "lesson-40"
+  },
+  {
+    "id": "drill-r-words-8",
+    "sound": "R",
+    "mode": "words",
+    "title": "Capital review R set",
+    "prompt": "prudent, strategic, resources",
+    "lesson_id": "lesson-41"
+  },
+  {
+    "id": "drill-th-sent-8",
+    "sound": "TH",
+    "mode": "sentences",
+    "title": "Risk escalation thought groups",
+    "prompt": "We escalated the issue and aligned the owners.",
+    "lesson_id": "lesson-42"
+  }
+]
