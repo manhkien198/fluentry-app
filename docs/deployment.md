@@ -73,6 +73,7 @@ This project must be deployable, not just runnable on localhost.
 ## Environment variables
 ### Backend
 - `APP_ENV`
+- `SEED_CONTENT_ENABLED` (`false` in production unless you intentionally want auto-seed from `backend/content/*.json`)
 - `PORT`
 - `DATABASE_URL`
 - `STORAGE_BUCKET`

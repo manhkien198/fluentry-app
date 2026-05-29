@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.core.config import SEED_CONTENT_ENABLED
 from app.schemas.drill import DrillItem
 from app.services.content_loader import load_seed_content
 from app.services.db import DrillRecord, SessionLocal, init_db
@@ -8,6 +9,8 @@ init_db()
 
 
 def ensure_default_drills() -> None:
+    if not SEED_CONTENT_ENABLED:
+        return
     _lessons, drills = load_seed_content()
     with SessionLocal() as db:
         if db.query(DrillRecord).count() > 0:

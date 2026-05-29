@@ -12,6 +12,13 @@ MFA_DICTIONARY_PATH = os.getenv("MFA_DICTIONARY_PATH", "")
 MFA_BINARY = os.getenv("MFA_BINARY", "mfa")
 FFMPEG_BINARY = os.getenv("FFMPEG_BINARY", "ffmpeg")
 APP_ENV = os.getenv("APP_ENV", "development").lower()
+
+# Seed content is convenient for local/dev. In production you typically want
+# lessons/drills provisioned via migrations/admin tooling instead.
+SEED_CONTENT_ENABLED = os.getenv(
+    "SEED_CONTENT_ENABLED",
+    "true" if APP_ENV in {"development", "dev", "test"} else "false",
+).lower() == "true"
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{(DATA_DIR / 'fluentry.db').as_posix()}")
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production-at-least-32-chars")
 JWT_ALG = os.getenv("JWT_ALG", "HS256")
