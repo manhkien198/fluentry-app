@@ -5,6 +5,7 @@ import { Screen, SectionCard } from "../../shared/ui";
 import { fetchDrills, DrillItem } from "../../shared/api";
 import { useAppColors } from "../../shared/useAppColors";
 import { t } from "../../shared/i18n";
+import type { AppColors } from "../../shared/theme";
 
 export function DrillsScreen() {
   const colors = useAppColors();
@@ -57,7 +58,7 @@ export function DrillsScreen() {
   );
 }
 
-const styles = (colors: any) =>
+const styles = (colors: AppColors) =>
   StyleSheet.create({
     header: { gap: 8 },
     title: { color: colors.text, fontSize: 24, fontWeight: "800" },

@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { AxiosRequestConfig } from "axios";
 import { appConfig } from "./config";
 import { useAppStore } from "./store";
 import {
@@ -132,8 +133,8 @@ api.interceptors.request.use((config) => {
   const { accessToken } = useAppStore.getState();
   config.baseURL = appConfig.apiBaseUrl;
   if (accessToken) {
-    (config.headers as any) = config.headers ?? {};
-    (config.headers as any).Authorization = `Bearer ${accessToken}`;
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
   return config;
 });
@@ -141,7 +142,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest: any = error?.config;
+    const originalRequest = error?.config as
+      | (AxiosRequestConfig & { _retry?: boolean })
+      | undefined;
     const isUnauthorized =
       axios.isAxiosError(error) && error.response?.status === 401;
 
@@ -258,11 +261,12 @@ export async function createPracticeSession(payload: {
 
 export async function uploadPracticeAudio(sessionId: string, fileUri: string) {
   const formData = new FormData();
-  formData.append("file", {
+  const filePart = {
     uri: fileUri,
     name: "recording.m4a",
     type: "audio/m4a",
-  } as any);
+  } as unknown as Blob;
+  formData.append("file", filePart);
 
   return withRetry(
     async () => {

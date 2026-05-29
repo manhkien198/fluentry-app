@@ -7,6 +7,7 @@ import { FadeIn, PressScale } from "../../shared/motion";
 import { fetchUserHistory, UserHistoryItem } from "../../shared/api";
 import { useAppColors } from "../../shared/useAppColors";
 import { t } from "../../shared/i18n";
+import type { AppColors } from "../../shared/theme";
 
 export function HistoryScreen() {
   const colors = useAppColors();
@@ -111,7 +112,7 @@ export function HistoryScreen() {
   );
 }
 
-const styles = (colors: any) =>
+const styles = (colors: AppColors) =>
   StyleSheet.create({
     header: { gap: 8 },
     title: { color: colors.text, fontSize: 24, fontWeight: "800" },

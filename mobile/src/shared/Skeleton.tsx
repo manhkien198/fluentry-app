@@ -25,7 +25,7 @@ export function SkeletonLine({
   const highlight = colors.border;
 
   const gradientColors = useMemo(
-    () => [base, highlight, base],
+    () => [base, highlight, base] as const,
     [base, highlight],
   );
 
@@ -77,7 +77,7 @@ export function SkeletonLine({
         }}
       >
         <LinearGradient
-          colors={gradientColors as any}
+          colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={{ flex: 1, opacity: 0.6 }}
