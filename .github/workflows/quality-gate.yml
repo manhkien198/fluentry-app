@@ -106,7 +106,7 @@ jobs:
     timeout-minutes: 20
     runs-on: ubuntu-latest
     needs: [backend-tests, mobile-lint, mobile-typecheck, mobile-tests]
-    if: ${{ secrets.SONAR_TOKEN != '' && secrets.SONAR_HOST_URL != '' }}
+    if: ${{ vars.SONAR_ENABLED == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
