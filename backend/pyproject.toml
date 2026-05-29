@@ -26,7 +26,7 @@ include = ["app*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-addopts = "--cov=app --cov-report=xml --cov-fail-under=60"
+addopts = "--cov=app --cov-report=xml --cov-fail-under=65"
 filterwarnings = [
   "ignore:Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.:starlette.exceptions.StarletteDeprecationWarning",
 ]
