@@ -8,6 +8,7 @@ import { useAppColors } from "../../shared/useAppColors";
 import { t } from "../../shared/i18n";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
+import type { AppColors } from "../../shared/theme";
 
 type ProgressState = {
   streak: number;
@@ -150,7 +151,7 @@ export function ProgressScreen({
   );
 }
 
-const styles = (colors: any) =>
+const styles = (colors: AppColors) =>
   StyleSheet.create({
     summary: { gap: 14 },
     title: { color: colors.text, fontSize: 24, fontWeight: "800" },

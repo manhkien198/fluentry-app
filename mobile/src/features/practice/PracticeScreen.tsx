@@ -10,6 +10,7 @@ import { t } from "../../shared/i18n";
 import { useAppColors } from "../../shared/useAppColors";
 import { Screen, SectionCard } from "../../shared/ui";
 import { useAppStore } from "../../shared/store";
+import type { AppColors } from "../../shared/theme";
 import {
   classifyNetworkIssue,
   createPracticeSession,
@@ -243,7 +244,7 @@ export function PracticeScreen({
   );
 }
 
-const styles = (colors: any) =>
+const styles = (colors: AppColors) =>
   StyleSheet.create({
     block: { gap: 14 },
     label: { color: colors.primary, fontSize: 13, fontWeight: "800" },

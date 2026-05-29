@@ -6,6 +6,7 @@ import { SkeletonLine } from "../../shared/Skeleton";
 import { api } from "../../shared/api";
 import { useAppColors } from "../../shared/useAppColors";
 import { t } from "../../shared/i18n";
+import type { AppColors } from "../../shared/theme";
 
 type TrendsPayload = {
   trend?: { overall?: number[]; pronunciation?: number[]; fluency?: number[] };
@@ -103,7 +104,7 @@ export function TrendsScreen() {
   );
 }
 
-const styles = (colors: any) =>
+const styles = (colors: AppColors) =>
   StyleSheet.create({
     block: { gap: 10 },
     title: { color: colors.text, fontSize: 24, fontWeight: "800" },

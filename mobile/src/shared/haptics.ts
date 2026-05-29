@@ -1,6 +1,13 @@
 import { Platform } from "react-native";
 import { useAppStore } from "./store";
 
+type ExpoHapticsModule = {
+  impactAsync: (style: unknown) => Promise<void>;
+  notificationAsync: (type: unknown) => Promise<void>;
+  ImpactFeedbackStyle: { Light: unknown; Medium: unknown };
+  NotificationFeedbackType: { Success: unknown; Error: unknown };
+};
+
 export type HapticKind = "light" | "medium" | "success" | "error";
 
 export async function haptic(kind: HapticKind = "light") {
@@ -13,7 +20,7 @@ export async function haptic(kind: HapticKind = "light") {
   try {
     // Avoid hard dependency during typecheck/build steps.
     // If expo-haptics is installed, this will work at runtime.
-    const Haptics = require("expo-haptics") as any;
+    const Haptics = require("expo-haptics") as ExpoHapticsModule;
 
     if (!Haptics) return;
 

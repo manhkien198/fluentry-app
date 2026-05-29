@@ -7,6 +7,7 @@ import { useAppColors } from "../../shared/useAppColors";
 import { MetricBar, Screen, ScorePill, SectionCard } from "../../shared/ui";
 import { useAppStore } from "../../shared/store";
 import { t } from "../../shared/i18n";
+import type { AppColors } from "../../shared/theme";
 
 export function ResultScreen({
   navigation,
@@ -192,7 +193,7 @@ export function ResultScreen({
   );
 }
 
-const styles = (colors: any) =>
+const styles = (colors: AppColors) =>
   StyleSheet.create({
     hero: { gap: 14, alignItems: "center" },
     heroLabel: { color: colors.primary, fontSize: 13, fontWeight: "800" },

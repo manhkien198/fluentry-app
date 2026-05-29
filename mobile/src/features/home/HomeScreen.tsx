@@ -10,6 +10,7 @@ import { t } from "../../shared/i18n";
 import { ScorePill, Screen, SectionCard } from "../../shared/ui";
 import { FadeIn, PressScale } from "../../shared/motion";
 import { useAppStore } from "../../shared/store";
+import type { AppColors } from "../../shared/theme";
 
 export function HomeScreen({
   navigation,
@@ -155,7 +156,7 @@ export function HomeScreen({
   );
 }
 
-const styles = (colors: any) =>
+const styles = (colors: AppColors) =>
   StyleSheet.create({
     heroContent: { gap: 18 },
     heroTitle: { color: colors.text, fontSize: 26, fontWeight: "800" },
