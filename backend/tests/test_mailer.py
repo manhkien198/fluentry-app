@@ -54,3 +54,33 @@ def test_send_verification_email_sends(monkeypatch: pytest.MonkeyPatch):
   assert fake.started_tls is True
   assert fake.logged_in is True
   assert fake.sent is True
+
+
+def test_send_verification_email_without_login(monkeypatch: pytest.MonkeyPatch):
+  class FakeSMTP:
+    def __init__(self, host: str, port: int, timeout: int):
+      self.started_tls = False
+      self.logged_in = False
+      self.sent = False
+
+    def __enter__(self):
+      return self
+
+    def __exit__(self, exc_type, exc, tb):
+      return False
+
+    def starttls(self):
+      self.started_tls = True
+
+    def login(self, user: str, password: str | None):
+      self.logged_in = True
+
+    def send_message(self, message):
+      self.sent = True
+
+  monkeypatch.setattr(mailer, "SMTP_HOST", "smtp.example.com")
+  monkeypatch.setattr(mailer, "SMTP_STARTTLS", False)
+  monkeypatch.setattr(mailer, "SMTP_USER", "")
+  monkeypatch.setattr(mailer.smtplib, "SMTP", lambda *_a, **_k: FakeSMTP("", 0, 0))
+
+  mailer.send_verification_email("a@example.com", "token")

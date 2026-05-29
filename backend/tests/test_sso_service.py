@@ -1,4 +1,6 @@
 import pytest
+import io
+import json
 
 import app.services.sso_service as sso
 
@@ -36,3 +38,37 @@ def test_decode_sso_claims_unknown_provider_raises(monkeypatch: pytest.MonkeyPat
   with pytest.raises(ValueError):
     sso.decode_sso_claims("github", "a.b.c")
 
+
+def test_google_tokeninfo_fallback_success(monkeypatch: pytest.MonkeyPatch):
+  class _Resp:
+    def __enter__(self):
+      payload = {"email": "g@example.com", "aud": sso.SSO_GOOGLE_AUDIENCE}
+      self._b = json.dumps(payload).encode("utf-8")
+      return self
+
+    def __exit__(self, exc_type, exc, tb):
+      return False
+
+    def read(self):
+      return self._b
+
+  monkeypatch.setattr(sso.urllib.request, "urlopen", lambda *_args, **_kwargs: _Resp())
+  claims = sso._google_tokeninfo_fallback("token")
+  assert claims["email"] == "g@example.com"
+
+
+def test_google_tokeninfo_fallback_missing_email_raises(monkeypatch: pytest.MonkeyPatch):
+  class _Resp:
+    def __enter__(self):
+      self._b = json.dumps({"aud": sso.SSO_GOOGLE_AUDIENCE}).encode("utf-8")
+      return self
+
+    def __exit__(self, exc_type, exc, tb):
+      return False
+
+    def read(self):
+      return self._b
+
+  monkeypatch.setattr(sso.urllib.request, "urlopen", lambda *_args, **_kwargs: _Resp())
+  with pytest.raises(ValueError):
+    sso._google_tokeninfo_fallback("token")
