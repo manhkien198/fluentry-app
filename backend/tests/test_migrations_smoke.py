@@ -4,6 +4,7 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
+import sys
 
 
 def test_alembic_upgrade_head_smoke():
@@ -13,7 +14,7 @@ def test_alembic_upgrade_head_smoke():
         env = os.environ.copy()
         env["DATABASE_URL"] = f"sqlite:///{db_path.as_posix()}"
         result = subprocess.run(
-            [str(backend_dir / ".mfa-venv/bin/alembic"), "upgrade", "head"],
+            [sys.executable, "-m", "alembic", "upgrade", "head"],
             cwd=backend_dir,
             env=env,
             capture_output=True,

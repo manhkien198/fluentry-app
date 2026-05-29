@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.core.config import SEED_CONTENT_ENABLED
 from app.schemas.lesson import Lesson
 from app.services.content_loader import load_seed_content
 from app.services.db import LessonRecord, SessionLocal, init_db
@@ -9,6 +10,8 @@ init_db()
 
 
 def ensure_default_lessons() -> None:
+    if not SEED_CONTENT_ENABLED:
+        return
     lessons, _ = load_seed_content()
     with SessionLocal() as db:
         if db.query(LessonRecord).count() > 0:

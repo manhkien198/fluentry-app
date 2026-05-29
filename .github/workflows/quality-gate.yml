@@ -1,12 +1,21 @@
 name: Quality Gate
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main]
 
+concurrency:
+  group: quality-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
-  backend:
+  backend-tests:
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -30,7 +39,8 @@ jobs:
           name: backend-coverage
           path: backend/coverage.xml
 
-  mobile:
+  mobile-lint:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -50,12 +60,42 @@ jobs:
         run: npm run lint
       - name: Format check mobile
         run: npm run format:check
-      - name: Run mobile tests with coverage
-        run: npm test -- --coverage --runInBand
+
+  mobile-typecheck:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+      - name: Install mobile deps
+        run: npm ci
       - name: Typecheck mobile
         run: npm run typecheck
-      - name: Validate mobile quality script
-        run: npm run quality
+
+  mobile-tests:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+      - name: Install mobile deps
+        run: npm ci
+      - name: Run mobile tests with coverage
+        run: npm test -- --coverage --runInBand
       - name: Upload mobile coverage
         uses: actions/upload-artifact@v4
         with:
@@ -63,9 +103,10 @@ jobs:
           path: mobile/coverage/lcov.info
 
   sonar:
+    timeout-minutes: 20
     runs-on: ubuntu-latest
-    needs: [backend, mobile]
-    if: ${{ secrets.SONAR_TOKEN != '' && secrets.SONAR_HOST_URL != '' }}
+    needs: [backend-tests, mobile-lint, mobile-typecheck, mobile-tests]
+    if: ${{ vars.SONAR_ENABLED == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4

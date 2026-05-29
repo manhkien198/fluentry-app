@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+mobile/node_modules/
+
+# Local env and logs
+.env
+.env.*
+*.log
+
+# OS
+.DS_Store

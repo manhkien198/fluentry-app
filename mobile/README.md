@@ -1,99 +1,120 @@
-# Fluentry
+# SpeakUp AI Mobile (Expo) — Production Handoff
 
-Fluentry is a cross-platform mobile pronunciation coaching app inspired by ELSA. This project uses a React Native Expo mobile client and a FastAPI backend so it can be developed quickly and deployed beyond local-only usage.
+This mobile app is an ELSA-like speaking coach client with:
+- Email auth + Google SSO + Apple SSO
+- Secure token storage (`expo-secure-store`)
+- Auto session restore on app boot
+- 401 handling + refresh-token retry/backoff
+- Route guard (authenticated vs unauthenticated stack)
+- Theme switch + settings panel
 
-## Project goals
-- Build a Fluentry-branded guided speaking experience that still mimics ELSA for Android and iOS
-- Provide lesson-based pronunciation practice
-- Return detailed pronunciation feedback, not just a single score
-- Keep the backend self-hosted and open-source friendly
-- Be deployable for real usage, not just a local prototype
+## 1) Quick start (local)
 
-## Repository structure
-- `mobile/` — Expo React Native app
-- `backend/` — FastAPI application and pronunciation scoring pipeline
-- `infra/` — deployment and local infrastructure files
-- `docs/` — architecture, API contract, roadmap, and deployment notes
+### Prerequisites
+- Node.js 20+
+- Expo CLI (optional, can use `npx expo`)
+- iOS Simulator / Android Emulator (or physical devices)
 
-## Current stack
-### Mobile
-- Expo React Native
-- TypeScript
-- React Navigation
-- React Native Paper
-- Zustand
-- TanStack Query
-- Axios
+### Install
+```bash
+cd /Users/neik/Desktop/elsa_clone/mobile
+npm install
+cp .env.example .env
+```
 
-### Backend
-- Python
-- FastAPI
-- Uvicorn
-- Planned pronunciation pipeline:
-  - Montreal Forced Aligner
-  - CMUdict
-  - g2p-en
-  - librosa / parselmouth
-  - rule-based scoring first, ML scoring later
+### Fill environment variables
+Edit `/Users/neik/Desktop/elsa_clone/mobile/.env`:
+- `EXPO_PUBLIC_API_BASE_URL`
+- `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`
+- `EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID`
+- `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`
+- `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID`
+- `EXPO_PUBLIC_APPLE_SERVICE_ID`
+- `EXPO_PUBLIC_APPLE_REDIRECT_URI`
 
-## Core product flow
-1. User opens the app and starts a lesson.
-2. User reads a guided word or sentence.
-3. App records audio and uploads it to the backend.
-4. Backend aligns speech with the expected text.
-5. Backend scores words, phonemes, and fluency.
-6. App displays detailed feedback and learning progress.
+### Run
+```bash
+npm run start
+# or
+npm run ios
+npm run android
+```
 
-## Documentation
-- [Product scope](docs/product-scope.md)
-- [Architecture](docs/architecture.md)
-- [API contract](docs/api-contract.md)
-- [Deployment plan](docs/deployment.md)
-- [Roadmap](docs/roadmap.md)
+## 2) Env matrix (what to set where)
 
-- [SonarQube setup](docs/sonarqube.md)
-- [Analytics taxonomy](docs/analytics-taxonomy.md)
-- [Go-live checklist](docs/go-live-checklist.md)
+### Core
+- `EXPO_PUBLIC_API_BASE_URL`: Backend base URL (e.g. `https://api.yourdomain.com`)
+- `EXPO_PUBLIC_APP_ENV`: `development` | `staging` | `production`
 
-## Quick start
-### Mobile
-1. `cd mobile`
-2. `cp .env.example .env`
-3. `npm install`
-4. `npm run start`
+### Google SSO
+- `EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID`: required for Expo Go flow
+- `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`: recommended fallback for token retrieval
+- `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`: required for standalone iOS build
+- `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID`: required for standalone Android build
 
-For iOS simulator and web, `localhost` is fine. For a physical phone, set `EXPO_PUBLIC_API_BASE_URL` to your computer LAN IP or a deployed HTTPS backend before launching Expo.
+### Apple SSO
+- `EXPO_PUBLIC_APPLE_SERVICE_ID`: Apple Service ID used by backend validation
+- `EXPO_PUBLIC_APPLE_REDIRECT_URI`: redirect URI registered in Apple Developer
 
-The result screen now renders backend analysis data, including alignment status, estimated duration, and a phoneme preview block.
+## 3) Backend auth contract checklist
 
-The app uses environment-only API configuration (`EXPO_PUBLIC_API_BASE_URL`) and no in-app API override.
+Backend should expose and return stable JSON shapes:
 
-### Backend
-1. `cd backend`
-2. `cp .env.example .env`
-3. `python3 -m venv .venv`
-4. `.venv/bin/pip install -e .`
-5. `PYTHONPATH=$(pwd) .venv/bin/uvicorn app.main:app --reload`
+- `POST /auth/login`
+  - request: `{ email, password }`
+  - response: `{ access_token, refresh_token?, token_type? }`
+- `POST /auth/register`
+  - request: `{ email, password }`
+  - response: `{ status, verificationToken? }`
+- `POST /auth/verify-email`
+  - request: `{ token }`
+  - response: `{ status }`
+- `POST /auth/resend-verification`
+  - request: `{ email }`
+  - response: `{ status, token? }`
+- `POST /auth/sso`
+  - request: `{ provider: 'google'|'apple', id_token }`
+  - response: `{ access_token, refresh_token?, token_type? }`
+- `POST /auth/refresh`
+  - request: `{ refresh_token }`
+  - response: `{ access_token, refresh_token? }`
 
-For production, set a strong `JWT_SECRET` (minimum 32 characters), explicit `CORS_ALLOW_ORIGINS`, `APP_ENV=production`, and enable SSO signature verification with provider audiences.
+If `/auth/refresh` is unavailable, app still works but user re-login is required after token expiry.
 
-Backend v1 now persists session metadata and uploaded audio under `app/data/` for local development.
+## 4) Production checks before release
 
+Run:
+```bash
+cd /Users/neik/Desktop/elsa_clone/mobile
+npm run typecheck
+./scripts/smoke-check.sh
+```
 
-### Docker backend
-1. `cd infra`
-2. `docker compose up --build`
+Verify manually:
+1. Sign in with email works
+2. Sign in with Google works on target platform
+3. Sign in with Apple works on iOS device/simulator where available
+4. Relaunch app keeps logged-in state
+5. Force 401 from backend => app attempts refresh then recovers or logs out cleanly
+6. Settings -> Sign out clears session and returns to Auth screen
 
-## Notes
-The machine used for scaffolding did not have Flutter installed, so the project was bootstrapped with Expo React Native to keep cross-platform delivery fast and deployable.
+## 5) Key files
+- App root: `/Users/neik/Desktop/elsa_clone/mobile/App.tsx`
+- Auth UI: `/Users/neik/Desktop/elsa_clone/mobile/src/features/auth/AuthScreen.tsx`
+- Settings UI: `/Users/neik/Desktop/elsa_clone/mobile/src/features/settings/SettingsScreen.tsx`
+- API + interceptors: `/Users/neik/Desktop/elsa_clone/mobile/src/shared/api.ts`
+- Token storage: `/Users/neik/Desktop/elsa_clone/mobile/src/shared/authStorage.ts`
+- Global store: `/Users/neik/Desktop/elsa_clone/mobile/src/shared/store.ts`
+- Smoke script: `/Users/neik/Desktop/elsa_clone/mobile/scripts/smoke-check.sh`
 
-## Engineering standard
-- All delivered code must be production-grade and complete (not prototype-grade).
-- Every behavior change must include meaningful automated tests (backend and/or mobile) for normal flow and critical failure paths.
-- UI changes must preserve accessibility/contrast and consistent interaction states (pressed, disabled, loading).
-- Network-dependent flows must include timeout handling, retry strategy, and user-facing recovery UX.
+## 6) Troubleshooting
 
+- `Google (disabled)` button:
+  - Missing Google client IDs in `.env`
+- Immediate logout after login:
+  - Backend token invalid or `/auth/refresh` contract mismatch
+- SSO returns token but backend rejects:
+  - Check backend verification against correct Google/Apple audience/client ID
+- API not reachable from device:
+  - Ensure mobile device can access `EXPO_PUBLIC_API_BASE_URL`
 
-## Quality scanning
-- SonarQube configuration is provided at `sonar-project.properties`.
-- Setup and run instructions: `docs/sonarqube.md`.
