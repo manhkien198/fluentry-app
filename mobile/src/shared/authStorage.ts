@@ -1,7 +1,7 @@
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from "expo-secure-store";
 
-const ACCESS_TOKEN_KEY = 'fluentry.access_token';
-const REFRESH_TOKEN_KEY = 'fluentry.refresh_token';
+const ACCESS_TOKEN_KEY = "fluentry.access_token";
+const REFRESH_TOKEN_KEY = "fluentry.refresh_token";
 
 export async function saveAccessToken(token: string) {
   await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, token);

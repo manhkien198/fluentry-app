@@ -6,6 +6,8 @@ import { SkeletonCard } from "../../shared/Skeleton";
 import { fetchUserHistory, fetchUserProgress } from "../../shared/api";
 import { useAppColors } from "../../shared/useAppColors";
 import { t } from "../../shared/i18n";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../navigation/types";
 
 type ProgressState = {
   streak: number;
@@ -29,7 +31,9 @@ const initialState: ProgressState = {
   session_count: 0,
 };
 
-export function ProgressScreen({ navigation }: any) {
+export function ProgressScreen({
+  navigation,
+}: NativeStackScreenProps<RootStackParamList, "Progress">) {
   const colors = useAppColors();
   const s = styles(colors);
 
@@ -52,11 +56,9 @@ export function ProgressScreen({ navigation }: any) {
           streak: progress.streak ?? 0,
           xp: progress.xp ?? 0,
           level: progress.level ?? "-",
-          pronunciation_score:
-            progress.pronunciation_score ?? 0,
+          pronunciation_score: progress.pronunciation_score ?? 0,
           fluency_score: progress.fluency_score ?? 0,
-          confidence_score:
-            progress.confidence_score ?? 0,
+          confidence_score: progress.confidence_score ?? 0,
           weak_sounds: progress.weak_sounds ?? [],
           session_count: progress.session_count ?? 0,
         });

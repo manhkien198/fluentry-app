@@ -1,10 +1,16 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, StyleProp, View, ViewStyle, DimensionValue } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAppColors } from './useAppColors';
+import React, { useEffect, useMemo } from "react";
+import {
+  Animated,
+  StyleProp,
+  View,
+  ViewStyle,
+  DimensionValue,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useAppColors } from "./useAppColors";
 
 export function SkeletonLine({
-  width = '100%',
+  width = "100%",
   height = 12,
   style,
 }: {
@@ -13,12 +19,15 @@ export function SkeletonLine({
   style?: StyleProp<ViewStyle>;
 }) {
   const colors = useAppColors();
-  const translateX = useRef(new Animated.Value(-1)).current;
+  const translateX = useMemo(() => new Animated.Value(-1), []);
 
   const base = colors.surfaceAlt;
   const highlight = colors.border;
 
-  const gradientColors = useMemo(() => [base, highlight, base], [base, highlight]);
+  const gradientColors = useMemo(
+    () => [base, highlight, base],
+    [base, highlight],
+  );
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -32,20 +41,37 @@ export function SkeletonLine({
     return () => loop.stop();
   }, [translateX]);
 
+  const animatedTranslateX = useMemo(
+    () =>
+      translateX.interpolate({
+        inputRange: [-1, 1],
+        outputRange: [-220, 220],
+      }),
+    [translateX],
+  );
+
   return (
-    <View style={[{ width, height, backgroundColor: base, borderRadius: 10, overflow: 'hidden' }, style]}>
+    <View
+      style={[
+        {
+          width,
+          height,
+          backgroundColor: base,
+          borderRadius: 10,
+          overflow: "hidden",
+        },
+        style,
+      ]}
+    >
       <Animated.View
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: 0,
           bottom: 0,
-          width: '120%',
+          width: "120%",
           transform: [
             {
-              translateX: translateX.interpolate({
-                inputRange: [-1, 1],
-                outputRange: [-220, 220],
-              }),
+              translateX: animatedTranslateX,
             },
           ],
         }}
@@ -64,11 +90,18 @@ export function SkeletonLine({
 export function SkeletonCard() {
   const colors = useAppColors();
   return (
-    <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 16, gap: 10 }}>
+    <View
+      style={{
+        backgroundColor: colors.surface,
+        borderRadius: 20,
+        padding: 16,
+        gap: 10,
+      }}
+    >
       <SkeletonLine width={160} height={16} />
-      <SkeletonLine width={'92%'} />
-      <SkeletonLine width={'70%'} />
-      <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+      <SkeletonLine width={"92%"} />
+      <SkeletonLine width={"70%"} />
+      <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
         <SkeletonLine width={90} height={34} style={{ borderRadius: 16 }} />
         <SkeletonLine width={90} height={34} style={{ borderRadius: 16 }} />
       </View>

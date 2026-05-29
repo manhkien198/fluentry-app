@@ -81,7 +81,10 @@ export function ResultScreen({
             value={result.pronunciationScore}
           />
           <MetricBar label={t("result.fluency")} value={result.fluencyScore} />
-          <MetricBar label={t("result.word_stress")} value={result.confidenceScore} />
+          <MetricBar
+            label={t("result.word_stress")}
+            value={result.confidenceScore}
+          />
         </Card.Content>
       </SectionCard>
 

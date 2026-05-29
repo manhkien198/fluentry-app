@@ -1,9 +1,9 @@
-import { Platform } from 'react-native';
-import { useAppStore } from './store';
+import { Platform } from "react-native";
+import { useAppStore } from "./store";
 
-export type HapticKind = 'light' | 'medium' | 'success' | 'error';
+export type HapticKind = "light" | "medium" | "success" | "error";
 
-export async function haptic(kind: HapticKind = 'light') {
+export async function haptic(kind: HapticKind = "light") {
   try {
     const { hapticsEnabled } = useAppStore.getState();
     if (!hapticsEnabled) return;
@@ -13,29 +13,30 @@ export async function haptic(kind: HapticKind = 'light') {
   try {
     // Avoid hard dependency during typecheck/build steps.
     // If expo-haptics is installed, this will work at runtime.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const Haptics = require('expo-haptics') as any;
+    const Haptics = require("expo-haptics") as any;
 
     if (!Haptics) return;
 
-    const isAndroid = Platform.OS === 'android';
+    const isAndroid = Platform.OS === "android";
 
     switch (kind) {
-      case 'success':
+      case "success":
         if (isAndroid) {
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           return;
         }
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        await Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success,
+        );
         return;
-      case 'error':
+      case "error":
         if (isAndroid) {
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           return;
         }
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         return;
-      case 'medium':
+      case "medium":
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         return;
       default:
