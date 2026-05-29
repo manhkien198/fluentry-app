@@ -9,3 +9,8 @@ mobile/node_modules/
 
 # OS
 .DS_Store
+
+# Test / coverage artifacts
+.coverage
+coverage.xml
+coverage/
