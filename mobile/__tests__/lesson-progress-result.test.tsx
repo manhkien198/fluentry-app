@@ -1,4 +1,3 @@
-import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 
 jest.mock("@tanstack/react-query", () => ({
@@ -19,7 +18,6 @@ jest.mock("../src/shared/useAppColors", () => ({
 }));
 
 jest.mock("../src/shared/ui", () => {
-  const React = require("react");
   const { View, Text } = require("react-native");
   return {
     Screen: ({ children }: any) => <View>{children}</View>,

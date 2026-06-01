@@ -1,4 +1,3 @@
-import React from "react";
 import { render, waitFor, fireEvent, act } from "@testing-library/react-native";
 import { TextInput } from "react-native";
 
@@ -14,7 +13,6 @@ jest.mock("../src/shared/useAppColors", () => ({
 }));
 
 jest.mock("../src/shared/ui", () => {
-  const React = require("react");
   const { View } = require("react-native");
   return {
     Screen: ({ children }: any) => <View>{children}</View>,
@@ -31,7 +29,6 @@ jest.mock("../src/shared/Skeleton", () => {
 });
 
 jest.mock("../src/shared/motion", () => {
-  const React = require("react");
   const { View } = require("react-native");
   return {
     FadeIn: ({ children }: any) => <View>{children}</View>,
@@ -46,6 +43,16 @@ jest.mock("../src/shared/api", () => ({
 }));
 
 import { ContentInfoScreen } from "../src/features/home/ContentInfoScreen";
+
+beforeEach(() => {
+  jest.useRealTimers();
+});
+
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
+
 import { HistoryScreen } from "../src/features/progress/HistoryScreen";
 import { TrendsScreen } from "../src/features/progress/TrendsScreen";
 import { fetchContentVersion, fetchUserHistory, api } from "../src/shared/api";
