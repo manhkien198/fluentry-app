@@ -5,6 +5,7 @@ import { Screen, SectionCard } from "../../shared/ui";
 import { fetchContentVersion } from "../../shared/api";
 import { useAppColors } from "../../shared/useAppColors";
 import { t } from "../../shared/i18n";
+import { spacing, typography } from "../../shared/theme";
 import type { AppColors } from "../../shared/theme";
 
 export function ContentInfoScreen() {
@@ -54,7 +55,7 @@ export function ContentInfoScreen() {
 
 const styles = (colors: AppColors) =>
   StyleSheet.create({
-    block: { gap: 8 },
-    title: { color: colors.text, fontSize: 24, fontWeight: "800" },
-    line: { color: colors.muted, fontSize: 14, lineHeight: 21 },
+    block: { gap: spacing.sm },
+    title: { color: colors.text, ...typography.title },
+    line: { color: colors.muted, ...typography.body },
   });

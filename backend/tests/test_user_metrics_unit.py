@@ -90,3 +90,85 @@ def test_safe_helpers_handle_bad_objects():
 
   assert user_metrics._safe_str(Bad(), default="x") == "x"
   assert user_metrics._safe_int("nope", default=7) == 7
+
+
+def test_symbol_bucket_and_extract_word_fallback():
+  assert user_metrics._symbol_to_sound_bucket("TH") == "TH"
+  assert user_metrics._symbol_to_sound_bucket("ER") == "R"
+  assert user_metrics._symbol_to_sound_bucket("L") == "L"
+  assert user_metrics._symbol_to_sound_bucket("ZZ") is None
+
+  result = {
+    "phonemes": [{"symbol": "ZZ", "status": "ok", "issue": None}],
+    "words": [{"text": " hello! ", "status": "warning"}],
+  }
+  weak = user_metrics._extract_weak_sounds_from_result(result)
+  assert weak == ["hello"]
+
+
+def test_infer_practice_minutes_branches(monkeypatch):
+  monkeypatch.setattr(user_metrics, "LESSON_DURATION_BY_ID", {"l1": 9})
+  assert user_metrics._infer_practice_minutes({"lesson_id": "l1"}) == 9
+
+  monkeypatch.setattr(user_metrics, "LESSON_DURATION_BY_ID", {})
+  s = {"lesson_id": "missing", "score_result": {"analysis": {"estimated_duration_ms": 180000}}}
+  assert user_metrics._infer_practice_minutes(s) == 3
+
+  s2 = {"lesson_id": "missing", "score_result": {"analysis": {"estimated_duration_ms": 0}}}
+  assert user_metrics._infer_practice_minutes(s2) == 1
+
+
+def test_compute_user_progress_payload_levels_and_wrappers(monkeypatch):
+  def _sessions(level_case: str):
+    base = {
+      "lesson_id": "x",
+      "score_status": "done",
+      "score_result": {},
+      "updated_at": "2026-01-01T00:00:00Z",
+      "created_at": "2026-01-01T00:00:00Z",
+    }
+    if level_case == "b2":
+      base["score_result"] = {"pronunciation_score": 90, "fluency_score": 88, "overall_score": 89}
+    elif level_case == "b1":
+      base["score_result"] = {"pronunciation_score": 80, "fluency_score": 76, "overall_score": 78}
+    elif level_case == "a2":
+      base["score_result"] = {"pronunciation_score": 65, "fluency_score": 60, "overall_score": 62}
+    else:
+      base["score_result"] = {"pronunciation_score": 40, "fluency_score": 50, "overall_score": 45}
+    return [base]
+
+  monkeypatch.setattr(user_metrics, "LESSON_XP_BY_ID", {})
+
+  monkeypatch.setattr(user_metrics, "list_sessions", lambda user_id=None: _sessions("b2"))
+  assert user_metrics.compute_user_progress_payload()["level"] == "B2"
+
+  monkeypatch.setattr(user_metrics, "list_sessions", lambda user_id=None: _sessions("b1"))
+  assert user_metrics.compute_user_progress_payload()["level"] == "B1"
+
+  monkeypatch.setattr(user_metrics, "list_sessions", lambda user_id=None: _sessions("a2"))
+  assert user_metrics.compute_user_progress_payload()["level"] == "A2"
+
+  monkeypatch.setattr(user_metrics, "list_sessions", lambda user_id=None: _sessions("a1"))
+  assert user_metrics.compute_user_progress_payload()["level"] == "A1"
+
+  hist = user_metrics.compute_user_history_payload(limit=1)
+  assert "items" in hist
+  assert isinstance(user_metrics.compute_user_history(), list)
+  assert isinstance(user_metrics.compute_user_progress(), dict)
+
+
+def test_compute_user_history_payload_filters_done_and_sorts(monkeypatch):
+  sessions = [
+    {"session_id": "old", "score_status": "done", "score_result": {"overall_score": 1}, "updated_at": "2026-01-01T00:00:00Z"},
+    {"session_id": "new", "score_status": "done", "score_result": {"overall_score": 2}, "updated_at": "2026-01-02T00:00:00Z"},
+    {"session_id": "skip", "score_status": "processing", "score_result": None, "updated_at": "2026-01-03T00:00:00Z"},
+  ]
+  monkeypatch.setattr(user_metrics, "list_sessions", lambda user_id=None: sessions)
+  out = user_metrics.compute_user_history_payload(limit=5)
+  assert out["items"][0]["session_id"] == "new"
+  assert out["items"][1]["session_id"] == "old"
+
+
+def test_streak_cap():
+  assert user_metrics._compute_streak_simple([{}] * 40) == 30
+  assert user_metrics._compute_streak_simple([{}] * 3) == 3

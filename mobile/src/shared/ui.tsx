@@ -2,6 +2,7 @@ import React, { PropsWithChildren } from "react";
 import { StyleSheet, View } from "react-native";
 import { Card, ProgressBar, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { radius, spacing, typography } from "./theme";
 import { useAppColors } from "./useAppColors";
 
 export function Screen({ children }: PropsWithChildren) {
@@ -10,10 +11,10 @@ export function Screen({ children }: PropsWithChildren) {
     screen: { flex: 1, backgroundColor: colors.background },
     inner: {
       flex: 1,
-      paddingHorizontal: 18,
-      paddingTop: 10,
-      paddingBottom: 16,
-      gap: 14,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.lg,
+      gap: spacing.md,
     },
   });
   return (
@@ -26,7 +27,11 @@ export function Screen({ children }: PropsWithChildren) {
 export function SectionCard({ children }: PropsWithChildren) {
   const colors = useAppColors();
   const styles = StyleSheet.create({
-    card: { backgroundColor: colors.surface, borderRadius: 20, padding: 6 },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.lg,
+      padding: spacing.xs,
+    },
   });
   return (
     <Card style={styles.card} mode="contained">
@@ -40,13 +45,13 @@ export function ScorePill({ label, value }: { label: string; value: string }) {
   const styles = StyleSheet.create({
     pill: {
       backgroundColor: colors.surfaceAlt,
-      borderRadius: 16,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       gap: 1,
       minWidth: 88,
     },
-    pillLabel: { color: colors.muted, fontSize: 11 },
+    pillLabel: { color: colors.muted, ...typography.caption },
     pillValue: { color: colors.text, fontSize: 17, fontWeight: "700" },
   });
 
@@ -62,15 +67,15 @@ export function MetricBar({ label, value }: { label: string; value: number }) {
   const colors = useAppColors();
   const safe = Math.max(0, Math.min(100, value));
   const styles = StyleSheet.create({
-    metricWrap: { gap: 6 },
+    metricWrap: { gap: spacing.sm },
     metricHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
     },
-    metricLabel: { color: colors.text, fontSize: 14, fontWeight: "600" },
-    metricValue: { color: colors.primary, fontSize: 13, fontWeight: "800" },
-    progress: { height: 9, borderRadius: 999, backgroundColor: colors.border },
+    metricLabel: { color: colors.text, ...typography.body, fontWeight: "600" },
+    metricValue: { color: colors.primary, ...typography.label, fontWeight: "800" },
+    progress: { height: 9, borderRadius: radius.full, backgroundColor: colors.border },
   });
 
   return (

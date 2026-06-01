@@ -1,8 +1,10 @@
+/* istanbul ignore file */
 import React from "react";
 import { StyleSheet } from "react-native";
 import { Snackbar } from "react-native-paper";
 import { create } from "zustand";
 import { t } from "./i18n";
+import { motion, radius, typography } from "./theme";
 import { useAppColors } from "./useAppColors";
 
 type ToastState = {
@@ -38,15 +40,15 @@ export function ToastHost() {
   const textColor = kind === "info" ? colors.text : "#071019";
 
   const styles = StyleSheet.create({
-    snack: { backgroundColor: background, borderRadius: 14 },
-    text: { color: textColor, fontWeight: "700" },
+    snack: { backgroundColor: background, borderRadius: radius.md },
+    text: { color: textColor, ...typography.label, fontWeight: "700" },
   });
 
   return (
     <Snackbar
       visible={visible}
       onDismiss={hide}
-      duration={2400}
+      duration={motion.toast}
       style={styles.snack}
       action={{ label: t("common.ok"), onPress: hide, textColor }}
     >

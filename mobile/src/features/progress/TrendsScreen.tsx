@@ -6,6 +6,7 @@ import { SkeletonLine } from "../../shared/Skeleton";
 import { api } from "../../shared/api";
 import { useAppColors } from "../../shared/useAppColors";
 import { t } from "../../shared/i18n";
+import { spacing, typography } from "../../shared/theme";
 import type { AppColors } from "../../shared/theme";
 
 type TrendsPayload = {
@@ -106,8 +107,8 @@ export function TrendsScreen() {
 
 const styles = (colors: AppColors) =>
   StyleSheet.create({
-    block: { gap: 10 },
-    title: { color: colors.text, fontSize: 24, fontWeight: "800" },
-    subtitle: { color: colors.text, fontSize: 18, fontWeight: "700" },
-    line: { color: colors.muted, fontSize: 14, lineHeight: 21 },
+    block: { gap: spacing.sm + 2 },
+    title: { color: colors.text, ...typography.title },
+    subtitle: { color: colors.text, ...typography.subtitle },
+    line: { color: colors.muted, ...typography.body },
   });

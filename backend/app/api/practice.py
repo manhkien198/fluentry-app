@@ -11,6 +11,7 @@ from app.schemas.practice import (
     PracticeSessionCreateRequest,
     PracticeSessionCreateResponse,
     PracticeSessionScoreDoneResponse,
+    PracticeSessionScoreFailedResponse,
     PracticeSessionScoreProcessingResponse,
     PracticeSessionScoreResponse,
     UploadAudioResponse,
@@ -110,7 +111,11 @@ def score_session(session_id: str, current_user=Depends(get_current_user)) -> Pr
         if async_result.failed():
             session["score_status"] = "failed"
             save_session(session_id, session)
-            return PracticeSessionScoreProcessingResponse(session_id=session_id, status="failed")
+            return PracticeSessionScoreFailedResponse(
+                session_id=session_id,
+                status="failed",
+                error=session.get("score_error"),
+            )
 
     async_result = run_practice_scoring.delay(session_id)
     session["score_status"] = "processing"

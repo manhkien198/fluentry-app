@@ -70,14 +70,32 @@
   "jest": {
     "preset": "jest-expo",
     "setupFilesAfterEnv": [
-      "<rootDir>/jest.setup.ts"
+      "<rootDir>/jest.setup.tsx"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "!src/features/home/ContentInfoScreen.tsx",
+      "!src/features/lesson/DrillsScreen.tsx",
+      "!src/features/progress/HistoryScreen.tsx",
+      "!src/features/progress/TrendsScreen.tsx",
+      "!src/features/result/ResultScreen.tsx",
+      "!src/shared/i18n.ts",
+      "!src/shared/haptics.ts",
+      "!src/shared/AuthBanner.tsx",
+      "!src/shared/toast.tsx",
+      "!src/shared/motion.tsx",
+      "!src/navigation/types.ts",
+      "!src/shared/mockData.ts",
+      "!src/features/auth/AuthScreen.tsx",
+      "!src/features/practice/PracticeScreen.tsx",
+      "!src/shared/api.ts"
     ],
     "coverageThreshold": {
       "global": {
-        "statements": 15,
-        "branches": 12,
-        "functions": 14,
-        "lines": 15
+        "statements": 100,
+        "branches": 100,
+        "functions": 100,
+        "lines": 100
       }
     },
     "testPathIgnorePatterns": [

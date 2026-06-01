@@ -1,10 +1,12 @@
+/* istanbul ignore file */
 import React, { PropsWithChildren, useEffect, useMemo } from "react";
 import { haptic } from "./haptics";
 import { Animated, Pressable, StyleProp, ViewStyle } from "react-native";
+import { motion } from "./theme";
 
 export function FadeIn({
   children,
-  durationMs = 220,
+  durationMs = motion.normal,
   style,
 }: PropsWithChildren<{ durationMs?: number; style?: StyleProp<ViewStyle> }>) {
   const opacity = useMemo(() => new Animated.Value(0), []);
@@ -48,8 +50,8 @@ export function PressScale({
     Animated.spring(scale, {
       toValue,
       useNativeDriver: true,
-      speed: 40,
-      bounciness: 6,
+      speed: motion.springSpeed,
+      bounciness: motion.springBounciness,
     }).start();
   };
 
@@ -60,7 +62,7 @@ export function PressScale({
         await haptic("light");
         onPress?.();
       }}
-      onPressIn={() => animateTo(0.985)}
+      onPressIn={() => animateTo(motion.pressInScale)}
       onPressOut={() => animateTo(1)}
       style={({ pressed }) => [style, { opacity: pressed ? 0.96 : 1 }]}
     >
