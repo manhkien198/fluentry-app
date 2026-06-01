@@ -39,3 +39,11 @@ class HistoryItem(BaseModel):
 
 class UserHistoryResponse(BaseModel):
     items: list[HistoryItem]
+
+
+class UserTrendsResponse(BaseModel):
+    trend: TrendSeries
+    consistency: list[int]
+    achievements: list[AchievementItem]
+    today_minutes: int
+    daily_target_minutes: int

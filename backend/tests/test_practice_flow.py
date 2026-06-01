@@ -9,6 +9,9 @@ from app.services.session_store import save_session
 
 
 def _auth_headers(client: TestClient, email: str = "test@example.com") -> tuple[dict[str, str], str]:
+    from app.api import auth as auth_api
+
+    auth_api.send_verification_email = lambda *_args, **_kwargs: None
     client.post("/auth/register", json={"email": email, "password": "secret123"})
     verify_token = create_email_verification_token(email)
     if verify_token:
@@ -181,3 +184,47 @@ def test_practice_result_returns_failed_payload():
     assert result_response.status_code == 200
     assert result_response.json()["status"] == "failed"
     assert result_response.json()["error"] == "worker timeout"
+
+
+def test_practice_score_returns_failed_when_async_task_failed(monkeypatch):
+    client = TestClient(app)
+    headers, user_id = _auth_headers(client, "score-failed@example.com")
+    session_id = "session-score-failed"
+    save_session(
+        session_id,
+        {
+            "session_id": session_id,
+            "user_id": user_id,
+            "lesson_id": "lesson-1",
+            "expected_text": "hello world",
+            "status": "uploaded",
+            "audio_path": "/tmp/audio.m4a",
+            "score_status": None,
+            "score_task_id": "task-failed",
+            "score_error": "worker timeout",
+            "score_result": None,
+        },
+    )
+
+    class FailedAsyncResult:
+        def successful(self):
+            return False
+
+        def failed(self):
+            return True
+
+    class DummyTask:
+        @staticmethod
+        def AsyncResult(_task_id: str):
+            return FailedAsyncResult()
+
+        @staticmethod
+        def delay(_session_id: str):
+            return FailedAsyncResult()
+
+    monkeypatch.setattr("app.api.practice.run_practice_scoring", DummyTask)
+
+    score_response = client.post(f"/practice/sessions/{session_id}/score", headers=headers)
+    assert score_response.status_code == 200
+    assert score_response.json()["status"] == "failed"
+    assert score_response.json()["error"] == "worker timeout"

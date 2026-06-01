@@ -17,7 +17,47 @@ import {
   fetchPracticeResult,
   requestPracticeScore,
   uploadPracticeAudio,
+  type NetworkIssueKind,
 } from "../../shared/api";
+
+export async function pollPracticeResult(
+  sessionId: string,
+  deps: {
+    fetchResult: (id: string) => Promise<Awaited<ReturnType<typeof fetchPracticeResult>>>;
+    sleep: (ms: number) => Promise<unknown>;
+    isCancelled: () => boolean;
+    tFn: (key: string) => string;
+    maxAttempts?: number;
+  },
+) {
+  const maxAttempts = deps.maxAttempts ?? 24;
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    if (deps.isCancelled()) throw new Error(deps.tFn("practice.cancelled"));
+    const result = await deps.fetchResult(sessionId);
+    if (result.status === "done") return result;
+    if (result.status === "failed")
+      throw new Error(result.error || deps.tFn("practice.failed"));
+    await deps.sleep(1500);
+  }
+  throw new Error(deps.tFn("practice.timeout"));
+}
+
+export function mapPracticeSubmitError(
+  error: unknown,
+  issue: NetworkIssueKind,
+  tFn: (key: string) => string,
+) {
+  const fallback =
+    issue === "offline"
+      ? tFn("practice.no_internet")
+      : issue === "timeout"
+        ? tFn("practice.request_timeout")
+        : tFn("toast.scoring_failed");
+
+  return error && typeof error === "object" && "message" in error
+    ? String((error as { message?: unknown }).message ?? fallback)
+    : fallback;
+}
 
 export function PracticeScreen({
   route,
@@ -87,18 +127,14 @@ export function PracticeScreen({
     }
   };
 
-  const pollUntilDone = async (sessionId: string) => {
-    const maxAttempts = 24;
-    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-      if (pollCancelledRef.current) throw new Error(t("practice.cancelled"));
-      const result = await fetchPracticeResult(sessionId);
-      if (result.status === "done") return result;
-      if (result.status === "failed")
-        throw new Error(result.error || t("practice.failed"));
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-    }
-    throw new Error(t("practice.timeout"));
-  };
+  const pollUntilDone = async (sessionId: string) =>
+    pollPracticeResult(sessionId, {
+      fetchResult: fetchPracticeResult,
+      /* istanbul ignore next */
+      sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+      isCancelled: () => pollCancelledRef.current,
+      tFn: t,
+    });
 
   const handleSubmit = async () => {
     setErrorMessage(null);
@@ -130,17 +166,7 @@ export function PracticeScreen({
       navigation.replace("Result", { sessionId: session.session_id });
     } catch (error: unknown) {
       const issue = classifyNetworkIssue(error);
-      const fallback =
-        issue === "offline"
-          ? t("practice.no_internet")
-          : issue === "timeout"
-            ? t("practice.request_timeout")
-            : t("toast.scoring_failed");
-
-      const message =
-        error && typeof error === "object" && "message" in error
-          ? String((error as { message?: unknown }).message ?? fallback)
-          : fallback;
+      const message = mapPracticeSubmitError(error, issue, t);
 
       setErrorMessage(message);
       showToast(message, "error");

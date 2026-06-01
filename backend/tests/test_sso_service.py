@@ -72,3 +72,71 @@ def test_google_tokeninfo_fallback_missing_email_raises(monkeypatch: pytest.Monk
   monkeypatch.setattr(sso.urllib.request, "urlopen", lambda *_args, **_kwargs: _Resp())
   with pytest.raises(ValueError):
     sso._google_tokeninfo_fallback("token")
+
+
+def test_google_tokeninfo_fallback_audience_mismatch_raises(monkeypatch: pytest.MonkeyPatch):
+  monkeypatch.setattr(sso, "SSO_GOOGLE_AUDIENCE", "expected-aud")
+
+  class _Resp:
+    def __enter__(self):
+      self._b = json.dumps({"email": "x@example.com", "aud": "wrong"}).encode("utf-8")
+      return self
+
+    def __exit__(self, exc_type, exc, tb):
+      return False
+
+    def read(self):
+      return self._b
+
+  monkeypatch.setattr(sso.urllib.request, "urlopen", lambda *_args, **_kwargs: _Resp())
+  with pytest.raises(ValueError):
+    sso._google_tokeninfo_fallback("token")
+
+
+def test_google_tokeninfo_fallback_http_error_raises(monkeypatch: pytest.MonkeyPatch):
+  monkeypatch.setattr(
+    sso.urllib.request,
+    "urlopen",
+    lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("boom")),
+  )
+  with pytest.raises(ValueError):
+    sso._google_tokeninfo_fallback("token")
+
+
+def test_decode_sso_claims_signature_verify_google_and_apple(monkeypatch: pytest.MonkeyPatch):
+  monkeypatch.setattr(sso, "SSO_VERIFY_SIGNATURE", True)
+  monkeypatch.setattr(sso, "SSO_GOOGLE_AUDIENCE", "google-aud")
+  monkeypatch.setattr(sso, "SSO_APPLE_AUDIENCE", "apple-aud")
+
+  class _Jwk:
+    key = "k"
+
+  class _JwkClient:
+    def __init__(self, *_args, **_kwargs):
+      pass
+
+    def get_signing_key_from_jwt(self, _token):
+      return _Jwk()
+
+  monkeypatch.setattr(sso, "PyJWKClient", _JwkClient)
+
+  def _decode(token, key, algorithms, audience, issuer):
+    return {"token": token, "aud": audience, "iss": issuer}
+
+  monkeypatch.setattr(sso.jwt, "decode", _decode)
+
+  g = sso.decode_sso_claims("google", "a.b.c")
+  a = sso.decode_sso_claims("apple", "a.b.c")
+  assert g["aud"] == "google-aud"
+  assert a["aud"] == "apple-aud"
+
+
+def test_decode_sso_claims_signature_verify_missing_audience(monkeypatch: pytest.MonkeyPatch):
+  monkeypatch.setattr(sso, "SSO_VERIFY_SIGNATURE", True)
+  monkeypatch.setattr(sso, "SSO_GOOGLE_AUDIENCE", "")
+  with pytest.raises(ValueError):
+    sso.decode_sso_claims("google", "a.b.c")
+
+  monkeypatch.setattr(sso, "SSO_APPLE_AUDIENCE", "")
+  with pytest.raises(ValueError):
+    sso.decode_sso_claims("apple", "a.b.c")

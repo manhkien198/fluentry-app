@@ -83,7 +83,15 @@ class PracticeSessionScoreDoneResponse(PracticeScoreBase):
     tips: list[str]
 
 
-PracticeSessionScoreResponse = PracticeSessionScoreProcessingResponse | PracticeSessionScoreDoneResponse
+class PracticeSessionScoreFailedResponse(BaseModel):
+    session_id: str
+    status: ScoreStatus
+    error: str | None = None
+
+
+PracticeSessionScoreResponse = (
+    PracticeSessionScoreProcessingResponse | PracticeSessionScoreFailedResponse | PracticeSessionScoreDoneResponse
+)
 
 
 class PracticeResultProcessingResponse(BaseModel):

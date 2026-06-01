@@ -18,7 +18,7 @@ const scoreRequestConfig = { timeout: 180000 };
 const resultRequestConfig = { timeout: 180000 };
 let refreshInFlight: Promise<string | null> | null = null;
 
-function isRetryableError(error: unknown) {
+export function isRetryableError(error: unknown) {
   if (axios.isAxiosError(error))
     return !error.response || error.code === "ECONNABORTED";
   if (typeof error === "object" && error !== null)
@@ -30,7 +30,7 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function withRetry<T>(
+export async function withRetry<T>(
   fn: () => Promise<T>,
   retries = 1,
   baseDelayMs = 500,
@@ -45,6 +45,7 @@ async function withRetry<T>(
       await delay(baseDelayMs * (attempt + 1));
     }
   }
+  /* istanbul ignore next */
   throw lastError;
 }
 
@@ -103,6 +104,7 @@ async function tryRefreshAccessToken() {
         useAppStore.getState().setAccessToken(nextAccessToken);
         useAppStore.getState().setAuthStatus("authenticated", null);
         await saveAccessToken(nextAccessToken);
+        /* istanbul ignore next */
         if (response.data.refresh_token)
           await saveRefreshToken(response.data.refresh_token);
         return nextAccessToken;

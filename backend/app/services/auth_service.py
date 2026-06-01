@@ -139,6 +139,38 @@ def verify_email_token(token: str) -> UserRecord | None:
         return user
 
 
+def create_password_reset_token(email: str) -> str | None:
+    with SessionLocal() as db:
+        user = db.query(UserRecord).filter(UserRecord.email == email).first()
+        if not user:
+            return None
+        token = f"rp-{uuid4()}-{uuid4()}"
+        user.password_reset_token = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        user.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+        db.commit()
+        return token
+
+
+def reset_password_with_token(token: str, new_password: str) -> UserRecord | None:
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    now = datetime.now(timezone.utc)
+    with SessionLocal() as db:
+        user = db.query(UserRecord).filter(UserRecord.password_reset_token == token_hash).first()
+        if not user:
+            return None
+        expires = user.password_reset_expires_at
+        if expires is not None and expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        if expires is not None and expires < now:
+            return None
+        user.password_hash = hash_password(new_password)
+        user.password_reset_token = None
+        user.password_reset_expires_at = None
+        db.commit()
+        db.refresh(user)
+        return user
+
+
 def rotate_refresh_token(refresh_token: str) -> dict | None:
     token_hash = _hash_token(refresh_token)
     now = datetime.now(timezone.utc)

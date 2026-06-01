@@ -2,14 +2,16 @@ from fastapi import APIRouter, HTTPException
 import logging
 from app.core.config import APP_ENV
 
-from app.schemas.auth import AuthRequest, AuthResponse, RefreshRequest, ResendVerificationRequest, SSORequest, UserProfile, VerifyEmailRequest
+from app.schemas.auth import AuthRequest, AuthResponse, ForgotPasswordRequest, RefreshRequest, ResendVerificationRequest, ResetPasswordRequest, SSORequest, UserProfile, VerifyEmailRequest
 from app.services.auth_service import (
     authenticate_user,
     create_email_verification_token,
     create_access_token,
+    create_password_reset_token,
     create_refresh_token,
     create_user,
     get_or_create_sso_user,
+    reset_password_with_token,
     revoke_refresh_token,
     rotate_refresh_token,
     verify_email_token,
@@ -17,8 +19,7 @@ from app.services.auth_service import (
 from app.services.rate_limit import allow_request
 from app.services.runtime_metrics import inc
 from app.services.sso_service import decode_sso_claims
-from app.services.mailer import send_verification_email
-
+from app.services.mailer import send_password_reset_email, send_verification_email
 router = APIRouter()
 logger = logging.getLogger("fluentry.auth")
 
@@ -105,6 +106,30 @@ def resend_verification(payload: ResendVerificationRequest) -> dict[str, str]:
     send_verification_email(payload.email, token)
     inc("auth.verify_email.resent")
     return {"status": "sent"}
+
+
+@router.post("/forgot-password")
+def forgot_password(payload: ForgotPasswordRequest) -> dict[str, str]:
+    if not allow_request(f"auth-forgot:{payload.email}", limit=5, window_seconds=300):
+        raise HTTPException(status_code=429, detail="Too many forgot-password attempts")
+    token = create_password_reset_token(payload.email)
+    if token:
+        send_password_reset_email(payload.email, token)
+    inc("auth.password_reset.requested")
+    return {"status": "sent"}
+
+
+@router.post("/reset-password")
+def reset_password(payload: ResetPasswordRequest) -> dict[str, str]:
+    if not allow_request("auth-reset", limit=10, window_seconds=300):
+        raise HTTPException(status_code=429, detail="Too many reset-password attempts")
+    if len(payload.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    user = reset_password_with_token(payload.token, payload.new_password)
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    inc("auth.password_reset.completed")
+    return {"status": "ok"}
 
 
 @router.post("/sso", response_model=AuthResponse)

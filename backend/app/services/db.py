@@ -79,6 +79,8 @@ class UserRecord(Base):
     email_verified: Mapped[str] = mapped_column(String(8), nullable=False, default="false")
     email_verify_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
     email_verify_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    password_reset_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    password_reset_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class RefreshTokenRecord(Base):
@@ -118,6 +120,10 @@ def _ensure_runtime_schema_compat() -> None:
                 conn.execute(text("ALTER TABLE users ADD COLUMN email_verify_token VARCHAR(255)"))
             if "email_verify_expires_at" not in columns:
                 conn.execute(text("ALTER TABLE users ADD COLUMN email_verify_expires_at DATETIME"))
+            if "password_reset_token" not in columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN password_reset_token VARCHAR(255)"))
+            if "password_reset_expires_at" not in columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN password_reset_expires_at DATETIME"))
         except Exception:
             pass
 
