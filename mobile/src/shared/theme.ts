@@ -26,6 +26,43 @@ export const darkColors = {
   danger: "#FB7185",
 };
 
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+};
+
+export const radius = {
+  sm: 10,
+  md: 14,
+  lg: 18,
+  xl: 22,
+  full: 999,
+};
+
+export const typography = {
+  display: { fontSize: 34, lineHeight: 42, fontWeight: "800" as const },
+  title: { fontSize: 26, lineHeight: 34, fontWeight: "800" as const },
+  subtitle: { fontSize: 18, lineHeight: 24, fontWeight: "700" as const },
+  body: { fontSize: 15, lineHeight: 22, fontWeight: "400" as const },
+  caption: { fontSize: 12, lineHeight: 18, fontWeight: "600" as const },
+  label: { fontSize: 13, lineHeight: 18, fontWeight: "700" as const },
+};
+
+export const motion = {
+  fast: 180,
+  normal: 240,
+  slow: 320,
+  pressInScale: 0.985,
+  springSpeed: 40,
+  springBounciness: 6,
+  skeleton: 900,
+  toast: 2400,
+};
+
 export type ThemeMode = "light" | "dark";
 export type AppColors = typeof darkColors;
 

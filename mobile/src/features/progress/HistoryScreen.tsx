@@ -7,6 +7,7 @@ import { FadeIn, PressScale } from "../../shared/motion";
 import { fetchUserHistory, UserHistoryItem } from "../../shared/api";
 import { useAppColors } from "../../shared/useAppColors";
 import { t } from "../../shared/i18n";
+import { radius, spacing, typography } from "../../shared/theme";
 import type { AppColors } from "../../shared/theme";
 
 export function HistoryScreen() {
@@ -114,18 +115,18 @@ export function HistoryScreen() {
 
 const styles = (colors: AppColors) =>
   StyleSheet.create({
-    header: { gap: 8 },
-    title: { color: colors.text, fontSize: 24, fontWeight: "800" },
-    subtitle: { color: colors.muted, fontSize: 14 },
-    list: { gap: 10, paddingBottom: 24 },
-    card: { backgroundColor: colors.surface, borderRadius: 16 },
+    header: { gap: spacing.sm },
+    title: { color: colors.text, ...typography.title },
+    subtitle: { color: colors.muted, ...typography.body },
+    list: { gap: spacing.sm, paddingBottom: spacing.xxl },
+    card: { backgroundColor: colors.surface, borderRadius: radius.md },
     row: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
     },
-    lesson: { color: colors.text, fontSize: 16, fontWeight: "700" },
-    meta: { color: colors.muted, fontSize: 12, marginTop: 4 },
-    score: { color: colors.primary, fontSize: 22, fontWeight: "800" },
-    empty: { color: colors.muted, textAlign: "center", marginTop: 22 },
+    lesson: { color: colors.text, ...typography.subtitle },
+    meta: { color: colors.muted, ...typography.caption, marginTop: spacing.xs },
+    score: { color: colors.primary, ...typography.title },
+    empty: { color: colors.muted, textAlign: "center", marginTop: spacing.xl },
   });

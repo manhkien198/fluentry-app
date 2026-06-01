@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import { Alert, Platform, StyleSheet, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { SegmentedButtons, Text, TextInput } from "react-native-paper";
+import {
+  Button,
+  SegmentedButtons,
+  Text,
+  TextInput,
+} from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
@@ -18,8 +23,9 @@ import {
   verifyEmail,
 } from "../../shared/api";
 import { appConfig } from "../../shared/config";
-import { colors as themeColors } from "../../shared/theme";
+import { radius, spacing, typography } from "../../shared/theme";
 import { useAppStore } from "../../shared/store";
+import { useAppColors } from "../../shared/useAppColors";
 import { saveAccessToken, saveRefreshToken } from "../../shared/authStorage";
 import { t } from "../../shared/i18n";
 
@@ -47,6 +53,7 @@ function extractSsoToken(result: unknown): string | null {
 export function AuthScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, "Auth">) {
+  const colors = useAppColors();
   const setAccessToken = useAppStore((s) => s.setAccessToken);
   const accessToken = useAppStore((s) => s.accessToken);
   const [isLoading, setIsLoading] = useState(false);
@@ -304,9 +311,24 @@ export function AuthScreen({
     }
   };
 
+  const styles = StyleSheet.create({
+    container: { flex: 1, padding: spacing.xxl, justifyContent: "space-between" },
+    hero: { marginTop: 84, gap: spacing.lg },
+    badge: {
+      color: colors.primary,
+      letterSpacing: 1,
+      ...typography.caption,
+      fontWeight: "800",
+    },
+    title: { color: colors.text, ...typography.display },
+    subtitle: { color: colors.muted, ...typography.body },
+    ctaGroup: { gap: spacing.md, marginBottom: 36 },
+    input: { backgroundColor: "transparent" },
+  });
+
   return (
     <LinearGradient
-      colors={["#0B1020", "#182347", "#281B52"]}
+      colors={[colors.background, colors.surfaceAlt, colors.surface]}
       style={styles.container}
     >
       <View style={styles.hero}>
@@ -374,19 +396,27 @@ export function AuthScreen({
         ) : null}
 
         {!showVerifyStep && !showResetStep ? (
-          <Text onPress={handleEmailAuth} style={styles.primaryBtn}>
-            {isLoading
-              ? t("common.loading")
-              : mode === "signin"
-                ? t("auth.sign_in")
-                : t("auth.sign_up")}
-          </Text>
+          <Button
+            mode="contained"
+            buttonColor={colors.primary}
+            textColor="#04111F"
+            disabled={isLoading}
+            loading={isLoading}
+            onPress={handleEmailAuth}
+          >
+            {mode === "signin" ? t("auth.sign_in") : t("auth.sign_up")}
+          </Button>
         ) : null}
 
         {!showVerifyStep && !showResetStep ? (
-          <Text onPress={handleRequestReset} style={styles.secondaryBtn}>
+          <Button
+            mode="outlined"
+            textColor={colors.text}
+            disabled={isLoading}
+            onPress={handleRequestReset}
+          >
             {t("auth.forgot_password")}
-          </Text>
+          </Button>
         ) : null}
 
         {showResetStep ? (
@@ -408,15 +438,24 @@ export function AuthScreen({
               autoCapitalize="none"
               style={styles.input}
             />
-            <Text onPress={handleConfirmReset} style={styles.primaryBtn}>
-              {isLoading ? t("common.loading") : t("auth.confirm_reset")}
-            </Text>
-            <Text
+            <Button
+              mode="contained"
+              buttonColor={colors.primary}
+              textColor="#04111F"
+              disabled={isLoading}
+              loading={isLoading}
+              onPress={handleConfirmReset}
+            >
+              {t("auth.confirm_reset")}
+            </Button>
+            <Button
+              mode="outlined"
+              textColor={colors.text}
+              disabled={isLoading}
               onPress={() => setShowResetStep(false)}
-              style={styles.secondaryBtn}
             >
               {t("auth.back_to_sign_in")}
-            </Text>
+            </Button>
           </>
         ) : null}
 
@@ -430,65 +469,47 @@ export function AuthScreen({
               autoCapitalize="none"
               style={styles.input}
             />
-            <Text onPress={handleVerify} style={styles.primaryBtn}>
-              {isLoading ? t("common.loading") : t("auth.verify_email")}
-            </Text>
-            <Text
+            <Button
+              mode="contained"
+              buttonColor={colors.primary}
+              textColor="#04111F"
+              disabled={isLoading}
+              loading={isLoading}
+              onPress={handleVerify}
+            >
+              {t("auth.verify_email")}
+            </Button>
+            <Button
+              mode="outlined"
+              textColor={colors.text}
+              disabled={isLoading}
               onPress={handleResendVerification}
-              style={styles.secondaryBtn}
             >
               {t("auth.resend_verification")}
-            </Text>
+            </Button>
           </>
         ) : null}
 
-        <Text onPress={handleGoogleSSO} style={styles.secondaryBtn}>
-          {isLoading || !request
-            ? "Google (disabled)"
-            : t("auth.google_sign_in")}
-        </Text>
-        <Text onPress={handleAppleSSO} style={styles.secondaryBtn}>
+        <Button
+          mode="outlined"
+          textColor={colors.text}
+          disabled={isLoading || !request}
+          onPress={handleGoogleSSO}
+        >
+          {isLoading || !request ? "Google (disabled)" : t("auth.google_sign_in")}
+        </Button>
+        <Button
+          mode="outlined"
+          textColor={colors.text}
+          disabled={isLoading || !appleAuthAvailable}
+          onPress={handleAppleSSO}
+        >
           {isLoading || !appleAuthAvailable
             ? "Apple (disabled)"
             : t("auth.apple_sign_in")}
-        </Text>
+        </Button>
       </View>
     </LinearGradient>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, justifyContent: "space-between" },
-  hero: { marginTop: 84, gap: 16 },
-  badge: {
-    color: themeColors.primary,
-    letterSpacing: 1,
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  title: {
-    color: themeColors.text,
-    fontSize: 34,
-    lineHeight: 42,
-    fontWeight: "800",
-  },
-  subtitle: { color: themeColors.muted, fontSize: 15, lineHeight: 22 },
-  ctaGroup: { gap: 12, marginBottom: 36 },
-  input: { backgroundColor: "transparent" },
-  primaryBtn: {
-    backgroundColor: themeColors.primary,
-    color: "#04111F",
-    fontWeight: "800",
-    textAlign: "center",
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  secondaryBtn: {
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    color: themeColors.text,
-    textAlign: "center",
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-});

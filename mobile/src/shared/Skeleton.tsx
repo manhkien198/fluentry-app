@@ -7,6 +7,7 @@ import {
   DimensionValue,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { motion, radius, spacing } from "./theme";
 import { useAppColors } from "./useAppColors";
 
 export function SkeletonLine({
@@ -33,7 +34,7 @@ export function SkeletonLine({
     const loop = Animated.loop(
       Animated.timing(translateX, {
         toValue: 1,
-        duration: 900,
+        duration: motion.skeleton,
         useNativeDriver: true,
       }),
     );
@@ -57,7 +58,7 @@ export function SkeletonLine({
           width,
           height,
           backgroundColor: base,
-          borderRadius: 10,
+          borderRadius: radius.sm,
           overflow: "hidden",
         },
         style,
@@ -93,9 +94,9 @@ export function SkeletonCard() {
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 20,
-        padding: 16,
-        gap: 10,
+        borderRadius: radius.xl,
+        padding: spacing.lg,
+        gap: spacing.sm,
       }}
     >
       <SkeletonLine width={160} height={16} />

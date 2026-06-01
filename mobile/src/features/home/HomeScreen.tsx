@@ -10,11 +10,15 @@ import { t } from "../../shared/i18n";
 import { ScorePill, Screen, SectionCard } from "../../shared/ui";
 import { FadeIn, PressScale } from "../../shared/motion";
 import { useAppStore } from "../../shared/store";
+import { radius, spacing, typography } from "../../shared/theme";
 import type { AppColors } from "../../shared/theme";
 
-export function HomeScreen({
-  navigation,
-}: NativeStackScreenProps<RootStackParamList, "Home">) {
+type HomeScreenProps = Pick<
+  NativeStackScreenProps<RootStackParamList, "Home">,
+  "navigation"
+>;
+
+export function HomeScreen({ navigation }: HomeScreenProps) {
   const colors = useAppColors();
   const { selectLesson } = useAppStore();
 
@@ -39,7 +43,7 @@ export function HomeScreen({
 
   return (
     <Screen>
-      <FadeIn style={{ flex: 1, gap: 14 }}>
+      <FadeIn style={{ flex: 1, gap: spacing.md }}>
         <SectionCard>
           <Card.Content style={s.heroContent}>
             <Text style={s.heroTitle}>{t("home.title")}</Text>
@@ -70,7 +74,7 @@ export function HomeScreen({
 
         <View style={s.sectionHeader}>
           <Text style={s.sectionTitle}>{t("home.recommended")}</Text>
-          <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
+          <View style={{ flexDirection: "row", gap: spacing.sm, flexWrap: "wrap" }}>
             <Button
               compact
               textColor={colors.primary}
@@ -158,19 +162,19 @@ export function HomeScreen({
 
 const styles = (colors: AppColors) =>
   StyleSheet.create({
-    heroContent: { gap: 18 },
-    heroTitle: { color: colors.text, fontSize: 26, fontWeight: "800" },
-    heroSubtitle: { color: colors.muted, fontSize: 15, lineHeight: 22 },
-    heroHint: { color: colors.primary, fontSize: 12, fontWeight: "600" },
-    pillRow: { flexDirection: "row", gap: 10 },
+    heroContent: { gap: spacing.lg },
+    heroTitle: { color: colors.text, ...typography.title },
+    heroSubtitle: { color: colors.muted, ...typography.body },
+    heroHint: { color: colors.primary, ...typography.caption },
+    pillRow: { flexDirection: "row", gap: spacing.sm },
     sectionHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
     },
-    sectionTitle: { color: colors.text, fontSize: 20, fontWeight: "700" },
-    listContent: { gap: 14, paddingBottom: 24 },
-    lessonCard: { backgroundColor: colors.surface, borderRadius: 22 },
+    sectionTitle: { color: colors.text, ...typography.subtitle },
+    listContent: { gap: spacing.md, paddingBottom: spacing.xxl },
+    lessonCard: { backgroundColor: colors.surface, borderRadius: radius.xl },
     lessonContent: {
       flexDirection: "row",
       justifyContent: "space-between",
