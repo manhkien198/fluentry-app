@@ -7,7 +7,7 @@ jest.mock("../src/shared/authStorage", () => ({
   saveRefreshToken: jest.fn(async () => undefined),
 }));
 
-import { clearAuthTokens, loadRefreshToken } from "../src/shared/authStorage";
+import { loadRefreshToken } from "../src/shared/authStorage";
 import { appConfig } from "../src/shared/config";
 
 describe("shared/api interceptor", () => {

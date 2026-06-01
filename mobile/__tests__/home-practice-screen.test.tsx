@@ -30,7 +30,6 @@ jest.mock("../src/shared/ui", () => {
 });
 
 jest.mock("../src/shared/motion", () => {
-  const React = require("react");
   const { View } = require("react-native");
   return {
     FadeIn: ({ children }: any) => <View>{children}</View>,
@@ -88,31 +87,6 @@ import { Audio } from "expo-av";
 import { showToast } from "../src/shared/toast";
 import { haptic } from "../src/shared/haptics";
 
-const enableRecordedAudio = () => {
-  let stopCalled = false;
-  (Audio.requestPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
-  (Audio.setAudioModeAsync as jest.Mock).mockResolvedValue(undefined);
-  (Audio.Recording as any).prototype.stopAndUnloadAsync = jest.fn(async () => {
-    stopCalled = true;
-  });
-  (Audio.Recording as any).prototype.getURI = jest.fn(() =>
-    stopCalled ? "file:///tmp/audio.m4a" : null,
-  );
-};
-
-const recordAudio = async (screen: ReturnType<typeof render>) => {
-  fireEvent.press(screen.getByText("Start recording"));
-  await waitFor(() => expect(screen.getByText("Stop recording")).toBeTruthy());
-  fireEvent.press(screen.getByText("Stop recording"));
-  await waitFor(() => expect(screen.getByText("Audio captured and ready")).toBeTruthy());
-};
-
-const makePracticeScreen = () => {
-  const navigation = { replace: jest.fn() } as any;
-  const route = { params: { lessonId: "lesson-1", prompt: "hello world" } } as any;
-  const screen = render(<PracticeScreen navigation={navigation} route={route} />);
-  return { screen, navigation };
-};
 
 const makePracticeScreenSubmitting = () => {
   const realUseState = React.useState;

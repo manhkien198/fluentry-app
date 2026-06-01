@@ -26,7 +26,7 @@ export async function pollPracticeResult(
     fetchResult: (id: string) => Promise<Awaited<ReturnType<typeof fetchPracticeResult>>>;
     sleep: (ms: number) => Promise<unknown>;
     isCancelled: () => boolean;
-    tFn: (key: string) => string;
+    tFn: (key: Parameters<typeof t>[0]) => string;
     maxAttempts?: number;
   },
 ) {
@@ -45,7 +45,7 @@ export async function pollPracticeResult(
 export function mapPracticeSubmitError(
   error: unknown,
   issue: NetworkIssueKind,
-  tFn: (key: string) => string,
+  tFn: (key: Parameters<typeof t>[0]) => string,
 ) {
   const fallback =
     issue === "offline"

@@ -1,6 +1,5 @@
-import React from "react";
 import * as ReactModule from "react";
-import { render, waitFor, fireEvent, act } from "@testing-library/react-native";
+import { render, waitFor, fireEvent } from "@testing-library/react-native";
 
 jest.mock("../src/shared/useAppColors", () => ({
   useAppColors: () => ({
@@ -65,7 +64,12 @@ import { DrillsScreen } from "../src/features/lesson/DrillsScreen";
 import { PracticeScreen } from "../src/features/practice/PracticeScreen";
 
 beforeEach(() => {
+  jest.useRealTimers();
   useAppStore.setState({ latestResult: null } as any);
+});
+
+afterEach(() => {
+  jest.clearAllMocks();
 });
 
 describe("DrillsScreen", () => {
@@ -130,11 +134,11 @@ describe("PracticeScreen edge states", () => {
 
   it("submits successfully when audio uri exists", async () => {
     const useStateSpy = jest.spyOn(ReactModule, "useState");
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["file:///tmp/a.m4a", jest.fn()]);
-    useStateSpy.mockImplementation((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementation(() => [null, jest.fn()]);
 
     (createPracticeSession as jest.Mock).mockResolvedValue({ session_id: "s1" });
     (uploadPracticeAudio as jest.Mock).mockResolvedValue({ status: "uploaded" });
@@ -167,11 +171,11 @@ describe("PracticeScreen edge states", () => {
 
   it("shows failed status error", async () => {
     const useStateSpy = jest.spyOn(ReactModule, "useState");
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["file:///tmp/a.m4a", jest.fn()]);
-    useStateSpy.mockImplementation((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementation(() => [null, jest.fn()]);
 
     (createPracticeSession as jest.Mock).mockResolvedValue({ session_id: "s2" });
     (uploadPracticeAudio as jest.Mock).mockResolvedValue({ status: "uploaded" });
@@ -190,11 +194,11 @@ describe("PracticeScreen edge states", () => {
 
   it("shows timeout fallback", async () => {
     const useStateSpy = jest.spyOn(ReactModule, "useState");
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["file:///tmp/a.m4a", jest.fn()]);
-    useStateSpy.mockImplementation((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementation(() => [null, jest.fn()]);
 
     (createPracticeSession as jest.Mock).mockResolvedValue({ session_id: "s4" });
     (uploadPracticeAudio as jest.Mock).mockResolvedValue({ status: "uploaded" });
@@ -213,11 +217,11 @@ describe("PracticeScreen edge states", () => {
 
   it("uses generic scoring failed fallback when timeout issue has missing message", async () => {
     const useStateSpy = jest.spyOn(ReactModule, "useState");
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["file:///tmp/a.m4a", jest.fn()]);
-    useStateSpy.mockImplementation((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementation(() => [null, jest.fn()]);
 
     (createPracticeSession as jest.Mock).mockResolvedValue({ session_id: "s4b" });
     (uploadPracticeAudio as jest.Mock).mockResolvedValue({ status: "uploaded" });
@@ -241,11 +245,11 @@ describe("PracticeScreen edge states", () => {
     };
 
     const useStateSpy = jest.spyOn(ReactModule, "useState");
-    useStateSpy.mockImplementationOnce((init: any) => [false, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [false, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => [true, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => [rec as any, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementation((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementation(() => [null, jest.fn()]);
 
     const navigation = { replace: jest.fn() } as any;
     const route = { params: { lessonId: "l1", prompt: "hello" } } as any;
@@ -266,12 +270,12 @@ describe("PracticeScreen edge states", () => {
     const setSubmitStage = jest.fn();
 
     useStateSpy.mockImplementationOnce(() => [true, setSubmitting]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["polling", setSubmitStage]);
-    useStateSpy.mockImplementation((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementation(() => [null, jest.fn()]);
 
     const navigation = { replace: jest.fn() } as any;
     const route = { params: { lessonId: "l1", prompt: "hello" } } as any;
@@ -286,11 +290,11 @@ describe("PracticeScreen edge states", () => {
 
   it("covers polling timeout throw at max attempts", async () => {
     const useStateSpy = jest.spyOn(ReactModule, "useState");
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["file:///tmp/a.m4a", jest.fn()]);
-    useStateSpy.mockImplementation((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementation(() => [null, jest.fn()]);
 
     (createPracticeSession as jest.Mock).mockResolvedValue({ session_id: "s8" });
     (uploadPracticeAudio as jest.Mock).mockResolvedValue({ status: "uploaded" });
@@ -310,11 +314,11 @@ describe("PracticeScreen edge states", () => {
 
   it("covers scoring not finished fallback branch", async () => {
     const useStateSpy = jest.spyOn(ReactModule, "useState");
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
-    useStateSpy.mockImplementationOnce((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["file:///tmp/a.m4a", jest.fn()]);
-    useStateSpy.mockImplementation((init: any) => [init, jest.fn()]);
+    useStateSpy.mockImplementation(() => [null, jest.fn()]);
 
     (createPracticeSession as jest.Mock).mockResolvedValue({ session_id: "s9" });
     (uploadPracticeAudio as jest.Mock).mockResolvedValue({ status: "uploaded" });

@@ -23,7 +23,7 @@ import {
   verifyEmail,
 } from "../../shared/api";
 import { appConfig } from "../../shared/config";
-import { radius, spacing, typography } from "../../shared/theme";
+import { spacing, typography } from "../../shared/theme";
 import { useAppStore } from "../../shared/store";
 import { useAppColors } from "../../shared/useAppColors";
 import { saveAccessToken, saveRefreshToken } from "../../shared/authStorage";

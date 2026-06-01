@@ -19,7 +19,6 @@ import { loadAccessToken } from "../src/shared/authStorage";
 import { haptic } from "../src/shared/haptics";
 import { useAppStore } from "../src/shared/store";
 import { t } from "../src/shared/i18n";
-import React from "react";
 import { render, fireEvent, act, waitFor } from "@testing-library/react-native";
 import { ToastHost, showToast } from "../src/shared/toast";
 import * as SecureStore from "expo-secure-store";
