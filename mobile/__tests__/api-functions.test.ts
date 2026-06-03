@@ -95,17 +95,13 @@ describe("shared/api functions", () => {
   });
 
   it("auth endpoints post and return data", async () => {
-    const { api, loginWithEmail, registerWithEmail, verifyEmail, resendVerification } = require("../src/shared/api");
+    const { api, loginWithEmail, registerWithEmail } = require("../src/shared/api");
     jest.spyOn(api, "post")
       .mockResolvedValueOnce({ data: { access_token: "a" } } as any)
-      .mockResolvedValueOnce({ data: { status: "ok" } } as any)
-      .mockResolvedValueOnce({ data: { status: "verified" } } as any)
-      .mockResolvedValueOnce({ data: { status: "sent" } } as any);
+      .mockResolvedValueOnce({ data: { access_token: "b", refresh_token: "r" } } as any);
 
     await expect(loginWithEmail({ email: "e", password: "p" })).resolves.toEqual({ access_token: "a" });
-    await expect(registerWithEmail({ email: "e", password: "p" })).resolves.toEqual({ status: "ok" });
-    await expect(verifyEmail("t")).resolves.toEqual({ status: "verified" });
-    await expect(resendVerification("e")).resolves.toEqual({ status: "sent" });
+    await expect(registerWithEmail({ email: "e", password: "p" })).resolves.toEqual({ access_token: "b", refresh_token: "r" });
   });
 
   it("user endpoints get and return data", async () => {

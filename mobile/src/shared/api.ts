@@ -322,32 +322,11 @@ export async function loginWithEmail(payload: EmailAuthPayload) {
 }
 
 export async function registerWithEmail(payload: EmailAuthPayload) {
-  const response = await api.post<{
-    status: string;
-    verificationToken?: string;
-  }>("/auth/register", payload);
+  const response = await api.post<AuthResponse>("/auth/register", payload);
   return response.data;
 }
 
-export async function verifyEmail(token: string) {
-  const response = await api.post<{ status: string }>("/auth/verify-email", {
-    token,
-  });
-  return response.data;
-}
-
-export async function resendVerification(email: string) {
-  const response = await api.post<{ status: string; token?: string }>(
-    "/auth/resend-verification",
-    { email },
-  );
-  return response.data;
-}
-
-export async function loginWithSSO(
-  provider: "google" | "apple",
-  idToken: string,
-) {
+export async function loginWithSSO(provider: "google", idToken: string) {
   const response = await api.post<AuthResponse>("/auth/sso", {
     provider,
     id_token: idToken,

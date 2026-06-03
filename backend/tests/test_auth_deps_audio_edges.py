@@ -38,17 +38,41 @@ def test_get_current_user_invalid_payload_and_missing_user(monkeypatch):
   assert e2.value.status_code == 401
 
 
-def test_register_verification_token_creation_failure(monkeypatch):
+def test_register_success_returns_auth_response(monkeypatch):
   class User:
+    id = "u1"
     email = "a@example.com"
+    display_name = "Learner"
+
+  class Row(User):
+    email_verified = "false"
+
+  class DB:
+    def get(self, _m, _id):
+      return Row()
+
+    def commit(self):
+      pass
+
+    def refresh(self, _row):
+      pass
+
+    def __enter__(self):
+      return self
+
+    def __exit__(self, *args):
+      return False
 
   monkeypatch.setattr(auth_api, "allow_request", lambda *_a, **_k: True)
   monkeypatch.setattr(auth_api, "create_user", lambda *_a, **_k: User())
-  monkeypatch.setattr(auth_api, "create_email_verification_token", lambda _e: None)
+  monkeypatch.setattr(auth_api, "SessionLocal", lambda: DB())
+  monkeypatch.setattr(auth_api, "create_access_token", lambda *_a, **_k: "at")
+  monkeypatch.setattr(auth_api, "create_refresh_token", lambda *_a, **_k: "rt")
 
-  with pytest.raises(HTTPException) as e:
-    auth_api.register(type("Req", (), {"email": "a@example.com", "password": "secret123"})())
-  assert e.value.status_code == 500
+  out = auth_api.register(type("Req", (), {"email": "a@example.com", "password": "secret123"})())
+  assert out.access_token == "at"
+  assert out.refresh_token == "rt"
+  assert out.user.email == "a@example.com"
 
 
 def test_sso_login_dev_and_prod_exception_paths(monkeypatch):
@@ -69,7 +93,15 @@ def test_sso_login_dev_and_prod_exception_paths(monkeypatch):
   assert prod_err.value.detail == "Invalid SSO token"
 
 
-def test_login_unverified_and_register_rate_limited(monkeypatch):
+def test_login_invalid_credentials_and_metrics(monkeypatch):
+  monkeypatch.setattr(auth_api, "allow_request", lambda *_a, **_k: True)
+  monkeypatch.setattr(auth_api, "authenticate_user", lambda *_a, **_k: None)
+  with pytest.raises(HTTPException) as e:
+    auth_api.login(type("Req", (), {"email": "u@example.com", "password": "x"})())
+  assert e.value.status_code == 401
+
+
+def test_login_allows_previously_unverified_user_and_register_rate_limited(monkeypatch):
   class User:
     id = "u1"
     email = "u@example.com"
@@ -78,10 +110,12 @@ def test_login_unverified_and_register_rate_limited(monkeypatch):
 
   monkeypatch.setattr(auth_api, "allow_request", lambda *_a, **_k: True)
   monkeypatch.setattr(auth_api, "authenticate_user", lambda *_a, **_k: User())
+  monkeypatch.setattr(auth_api, "create_access_token", lambda *_a, **_k: "at")
+  monkeypatch.setattr(auth_api, "create_refresh_token", lambda *_a, **_k: "rt")
   req = type("Req", (), {"email": "u@example.com", "password": "x"})()
-  with pytest.raises(HTTPException) as e1:
-    auth_api.login(req)
-  assert e1.value.status_code == 403
+  out = auth_api.login(req)
+  assert out.access_token == "at"
+  assert out.refresh_token == "rt"
 
   monkeypatch.setattr(auth_api, "allow_request", lambda *_a, **_k: False)
   with pytest.raises(HTTPException) as e2:
@@ -101,6 +135,8 @@ def test_register_create_user_value_error_and_resend_success(monkeypatch):
     auth_api.register(req)
   assert e1.value.status_code == 400
 
+  monkeypatch.setattr(auth_api, "create_user", lambda *_a, **_k: type("User", (), {"email": "u@example.com"})())
+  monkeypatch.setattr(auth_api, "SessionLocal", lambda: type("DB", (), {"get": lambda *_a, **_k: None, "__enter__": lambda s: s, "__exit__": lambda s, *a: False})())
   monkeypatch.setattr(auth_api, "create_email_verification_token", lambda _e: "tok")
   sent = {"ok": False}
   monkeypatch.setattr(auth_api, "send_verification_email", lambda *_a, **_k: sent.__setitem__("ok", True))
