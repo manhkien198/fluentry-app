@@ -13,10 +13,12 @@ jest.mock("../src/shared/useAppColors", () => ({
 }));
 
 jest.mock("../src/shared/ui", () => {
-  const { View } = require("react-native");
+  const { View, Text } = require("react-native");
   return {
     Screen: ({ children }: any) => <View>{children}</View>,
     SectionCard: ({ children }: any) => <View>{children}</View>,
+    ScorePill: ({ label, value }: any) => <Text>{`${label}:${value}`}</Text>,
+    MetricBar: ({ label, value }: any) => <Text>{`${label}:${value}`}</Text>,
   };
 });
 
@@ -150,14 +152,14 @@ describe("TrendsScreen", () => {
     });
     const screen = render(<TrendsScreen />);
 
-    await waitFor(() => expect(screen.getByText(/Streak/)).toBeTruthy());
+    await waitFor(() => expect(screen.getAllByText(/Streak/).length).toBeGreaterThan(0));
   });
 
   it("renders no achievements fallback", async () => {
     (api.get as jest.Mock).mockRejectedValue(new Error("boom"));
     const screen = render(<TrendsScreen />);
     await waitFor(() => {
-      expect(screen.getByText("No achievements yet.")).toBeTruthy();
+      expect(screen.getAllByText("No achievements yet.").length).toBeGreaterThan(0);
     });
   });
 

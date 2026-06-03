@@ -2,7 +2,7 @@ import React from "react";
 import { FlatList, StyleSheet, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Card, Text } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
 import { RootStackParamList } from "../../navigation/types";
 import { fetchLessons, fetchUserProgress } from "../../shared/api";
 import { useAppColors } from "../../shared/useAppColors";
@@ -45,7 +45,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     <Screen>
       <FadeIn style={{ flex: 1, gap: spacing.md }}>
         <SectionCard>
-          <Card.Content style={s.heroContent}>
+          <View style={s.heroContent}>
             <Text style={s.heroTitle}>{t("home.title")}</Text>
             <Text style={s.heroSubtitle}>{t("home.subtitle")}</Text>
             <Text style={s.heroHint}>{t("home.tip")}</Text>
@@ -61,6 +61,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
               mode="contained"
               buttonColor={colors.primary}
               textColor="#04111F"
+              contentStyle={{ height: 52 }}
               onPress={() => {
                 if (!lessons.length) return;
                 selectLesson(lessons[0].id);
@@ -69,42 +70,28 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             >
               {t("home.continue")}
             </Button>
-          </Card.Content>
+          </View>
         </SectionCard>
 
-        <View style={s.sectionHeader}>
-          <Text style={s.sectionTitle}>{t("home.recommended")}</Text>
-          <View style={{ flexDirection: "row", gap: spacing.sm, flexWrap: "wrap" }}>
-            <Button
-              compact
-              textColor={colors.primary}
-              onPress={() => navigation.navigate("Trends")}
-            >
-              {t("nav.trends")}
-            </Button>
-            <Button
-              compact
-              textColor={colors.primary}
-              onPress={() => navigation.navigate("Drills")}
-            >
-              {t("nav.drills")}
-            </Button>
-            <Button
-              compact
-              textColor={colors.primary}
-              onPress={() => navigation.navigate("ContentInfo")}
-            >
-              {t("nav.content")}
-            </Button>
-            <Button
-              compact
-              textColor={colors.primary}
-              onPress={() => navigation.navigate("Settings")}
-            >
-              {t("nav.settings")}
-            </Button>
+        <SectionCard>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>{t("home.recommended")}</Text>
+            <View style={s.quickActions}>
+              <Button compact textColor={colors.primary} onPress={() => navigation.navigate("Trends")}>
+                {t("nav.trends")}
+              </Button>
+              <Button compact textColor={colors.primary} onPress={() => navigation.navigate("Drills")}>
+                {t("nav.drills")}
+              </Button>
+              <Button compact textColor={colors.primary} onPress={() => navigation.navigate("ContentInfo")}>
+                {t("nav.content")}
+              </Button>
+              <Button compact textColor={colors.primary} onPress={() => navigation.navigate("Settings")}>
+                {t("nav.settings")}
+              </Button>
+            </View>
           </View>
-        </View>
+        </SectionCard>
 
         <FlatList
           data={lessons}
@@ -117,8 +104,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                 navigation.navigate("Lesson", { lessonId: item.id });
               }}
             >
-              <Card style={s.lessonCard} mode="contained">
-                <Card.Content style={s.lessonContent}>
+              <View style={s.lessonCard}>
+                <View style={s.lessonContent}>
                   <View>
                     <Text style={s.lessonLevel}>{item.level}</Text>
                     <Text style={s.lessonTitle}>{item.title}</Text>
@@ -132,8 +119,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                   <Button mode="contained-tonal" textColor={colors.text}>
                     Start
                   </Button>
-                </Card.Content>
-              </Card>
+                </View>
+              </View>
             </PressScale>
           )}
           ListEmptyComponent={
@@ -166,26 +153,37 @@ const styles = (colors: AppColors) =>
     heroTitle: { color: colors.text, ...typography.title },
     heroSubtitle: { color: colors.muted, ...typography.body },
     heroHint: { color: colors.primary, ...typography.caption },
-    pillRow: { flexDirection: "row", gap: spacing.sm },
-    sectionHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
+    pillRow: { flexDirection: "row", gap: spacing.sm, flexWrap: "wrap" },
+    sectionHeader: { gap: spacing.md },
     sectionTitle: { color: colors.text, ...typography.subtitle },
+    quickActions: {
+      flexDirection: "row",
+      gap: spacing.xs,
+      flexWrap: "wrap",
+    },
     listContent: { gap: spacing.md, paddingBottom: spacing.xxl },
-    lessonCard: { backgroundColor: colors.surface, borderRadius: radius.xl },
+    lessonCard: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: "hidden",
+    },
     lessonContent: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
+      gap: spacing.md,
+      padding: spacing.md,
     },
     lessonLevel: {
       color: colors.primary,
       fontSize: 12,
-      fontWeight: "700",
+      fontWeight: "800",
       marginBottom: 6,
+      letterSpacing: 0.4,
     },
-    lessonTitle: { color: colors.text, fontSize: 18, fontWeight: "700" },
+    lessonTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
     lessonMeta: { color: colors.muted, marginTop: 8 },
+    lessonStart: { minWidth: 88 },
   });

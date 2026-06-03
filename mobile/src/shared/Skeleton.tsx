@@ -5,10 +5,13 @@ import {
   View,
   ViewStyle,
   DimensionValue,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { motion, radius, spacing } from "./theme";
 import { useAppColors } from "./useAppColors";
+
+const canUseNativeDriver = Platform.OS !== "web";
 
 export function SkeletonLine({
   width = "100%",
@@ -35,7 +38,7 @@ export function SkeletonLine({
       Animated.timing(translateX, {
         toValue: 1,
         duration: motion.skeleton,
-        useNativeDriver: true,
+        useNativeDriver: canUseNativeDriver,
       }),
     );
     loop.start();

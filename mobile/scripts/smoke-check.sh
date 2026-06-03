@@ -17,7 +17,6 @@ done
 echo "[2/4] Check env placeholders"
 grep -q "EXPO_PUBLIC_API_BASE_URL" "$ROOT/.env.example"
 grep -q "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID" "$ROOT/.env.example"
-grep -q "EXPO_PUBLIC_APPLE_SERVICE_ID" "$ROOT/.env.example"
 
 echo "[3/4] TypeScript"
 "$ROOT/node_modules/.bin/tsc" --noEmit -p "$ROOT/tsconfig.json"

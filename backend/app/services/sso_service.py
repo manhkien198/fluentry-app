@@ -8,8 +8,6 @@ import urllib.parse
 import urllib.request
 
 from app.core.config import (
-    SSO_APPLE_AUDIENCE,
-    SSO_APPLE_ISSUER,
     SSO_GOOGLE_AUDIENCE,
     SSO_GOOGLE_ISSUER,
     SSO_VERIFY_SIGNATURE,
@@ -39,19 +37,6 @@ def decode_sso_claims(provider: str, id_token: str) -> dict:
             algorithms=["RS256"],
             audience=SSO_GOOGLE_AUDIENCE,
             issuer=SSO_GOOGLE_ISSUER,
-        )
-
-    if provider_name == "apple":
-        if not SSO_APPLE_AUDIENCE:
-            raise ValueError("Missing SSO_APPLE_AUDIENCE for signature verification")
-        jwks_client = PyJWKClient("https://appleid.apple.com/auth/keys")
-        signing_key = jwks_client.get_signing_key_from_jwt(id_token)
-        return jwt.decode(
-            id_token,
-            signing_key.key,
-            algorithms=["RS256"],
-            audience=SSO_APPLE_AUDIENCE,
-            issuer=SSO_APPLE_ISSUER,
         )
 
     raise ValueError(f"Provider not configured for signature verification: {provider_name}")

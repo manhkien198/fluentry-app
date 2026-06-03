@@ -335,8 +335,8 @@ describe("ResultScreen", () => {
     const navigation = { replace: jest.fn(), navigate: jest.fn() } as any;
     const screen = render(<ResultScreen navigation={navigation} route={{} as any} />);
 
-    fireEvent.press(screen.getByText("View progress"));
-    fireEvent.press(screen.getByText("Back to home"));
+    fireEvent.press(screen.getAllByText("View progress")[0]);
+    fireEvent.press(screen.getAllByText("Back to home")[0]);
 
     expect(navigation.navigate).toHaveBeenCalledWith("Progress");
     expect(navigation.navigate).toHaveBeenCalledWith("Home");

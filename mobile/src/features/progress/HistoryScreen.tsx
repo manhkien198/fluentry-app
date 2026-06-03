@@ -57,24 +57,34 @@ export function HistoryScreen() {
           </Card.Content>
         </SectionCard>
 
-        <TextInput
-          mode="outlined"
-          placeholder={t("history.search_placeholder")}
-          value={query}
-          onChangeText={setQuery}
-          style={{ minHeight: 48 }}
-        />
+        <SectionCard>
+          <Card.Content style={s.searchWrap}>
+            <TextInput
+              mode="outlined"
+              placeholder={t("history.search_placeholder")}
+              value={query}
+              onChangeText={setQuery}
+              style={s.search}
+            />
+          </Card.Content>
+        </SectionCard>
 
         {loadError ? (
-          <Text style={[s.empty, { color: colors.warning }]}>{loadError}</Text>
+          <SectionCard>
+            <Card.Content>
+              <Text style={[s.empty, { color: colors.warning }]}>{loadError}</Text>
+            </Card.Content>
+          </SectionCard>
         ) : null}
         {!items.length && !loadError ? (
-          <View style={{ gap: 10, marginTop: 6 }}>
-            <SkeletonLine height={16} width={220} />
-            <SkeletonLine height={70} />
-            <SkeletonLine height={70} />
-            <SkeletonLine height={70} />
-          </View>
+          <SectionCard>
+            <Card.Content style={{ gap: 10 }}>
+              <SkeletonLine height={16} width={220} />
+              <SkeletonLine height={70} />
+              <SkeletonLine height={70} />
+              <SkeletonLine height={70} />
+            </Card.Content>
+          </SectionCard>
         ) : null}
 
         <FlatList
@@ -102,7 +112,9 @@ export function HistoryScreen() {
                     </Text>
                     <Text style={s.meta}>{item.session_id}</Text>
                   </View>
-                  <Text style={s.score}>{item.overall_score}</Text>
+                  <View style={s.scorePill}>
+                    <Text style={s.score}>{item.overall_score}</Text>
+                  </View>
                 </Card.Content>
               </Card>
             </PressScale>
@@ -118,15 +130,33 @@ const styles = (colors: AppColors) =>
     header: { gap: spacing.sm },
     title: { color: colors.text, ...typography.title },
     subtitle: { color: colors.muted, ...typography.body },
+    searchWrap: { padding: spacing.xs },
+    search: { minHeight: 48, backgroundColor: colors.surface },
     list: { gap: spacing.sm, paddingBottom: spacing.xxl },
-    card: { backgroundColor: colors.surface, borderRadius: radius.md },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
     row: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
+      gap: spacing.md,
     },
     lesson: { color: colors.text, ...typography.subtitle },
     meta: { color: colors.muted, ...typography.caption, marginTop: spacing.xs },
+    scorePill: {
+      minWidth: 64,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: spacing.sm,
+    },
     score: { color: colors.primary, ...typography.title },
     empty: { color: colors.muted, textAlign: "center", marginTop: spacing.xl },
   });

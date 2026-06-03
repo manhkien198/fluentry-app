@@ -2,7 +2,7 @@
 
 This mobile app is an ELSA-like speaking coach client with:
 
-- Email auth + Google SSO + Apple SSO
+- Email auth + Google SSO
 - Secure token storage (`expo-secure-store`)
 - Auto session restore on app boot
 - 401 handling + refresh-token retry/backoff
@@ -34,8 +34,6 @@ Edit `/Users/neik/Desktop/elsa_clone/mobile/.env`:
 - `EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID`
 - `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`
 - `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID`
-- `EXPO_PUBLIC_APPLE_SERVICE_ID`
-- `EXPO_PUBLIC_APPLE_REDIRECT_URI`
 
 ### Run
 
@@ -60,11 +58,6 @@ npm run android
 - `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`: required for standalone iOS build
 - `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID`: required for standalone Android build
 
-### Apple SSO
-
-- `EXPO_PUBLIC_APPLE_SERVICE_ID`: Apple Service ID used by backend validation
-- `EXPO_PUBLIC_APPLE_REDIRECT_URI`: redirect URI registered in Apple Developer
-
 ## 3) Backend auth contract checklist
 
 Backend should expose and return stable JSON shapes:
@@ -82,7 +75,7 @@ Backend should expose and return stable JSON shapes:
   - request: `{ email }`
   - response: `{ status, token? }`
 - `POST /auth/sso`
-  - request: `{ provider: 'google'|'apple', id_token }`
+  - request: `{ provider: 'google', id_token }`
   - response: `{ access_token, refresh_token?, token_type? }`
 - `POST /auth/refresh`
   - request: `{ refresh_token }`
@@ -107,10 +100,9 @@ Verify manually:
 
 1. Sign in with email works
 2. Sign in with Google works on target platform
-3. Sign in with Apple works on iOS device/simulator where available
-4. Relaunch app keeps logged-in state
-5. Force 401 from backend => app attempts refresh then recovers or logs out cleanly
-6. Settings -> Sign out clears session and returns to Auth screen
+3. Relaunch app keeps logged-in state
+4. Force 401 from backend => app attempts refresh then recovers or logs out cleanly
+5. Settings -> Sign out clears session and returns to Auth screen
 
 ## 5) Key files
 
@@ -132,6 +124,6 @@ Verify manually:
 - Immediate logout after login:
   - Backend token invalid or `/auth/refresh` contract mismatch
 - SSO returns token but backend rejects:
-  - Check backend verification against correct Google/Apple audience/client ID
+  - Check backend verification against the correct Google audience/client ID
 - API not reachable from device:
   - Ensure mobile device can access `EXPO_PUBLIC_API_BASE_URL`

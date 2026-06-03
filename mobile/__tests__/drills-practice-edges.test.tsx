@@ -32,24 +32,24 @@ jest.mock("../src/shared/api", () => ({
   classifyNetworkIssue: jest.fn(() => "offline"),
 }));
 
-jest.mock("expo-av", () => ({
-  Audio: {
-    requestPermissionsAsync: jest.fn(async () => ({ granted: false })),
-    setAudioModeAsync: jest.fn(async () => undefined),
-    Recording: jest.fn(() => ({
-      prepareToRecordAsync: jest.fn(async () => undefined),
-      startAsync: jest.fn(async () => undefined),
-      stopAndUnloadAsync: jest.fn(async () => undefined),
-      getURI: jest.fn(() => "file:///tmp/a.m4a"),
-    })),
-    RecordingOptionsPresets: { HIGH_QUALITY: {} },
+jest.mock("expo-audio", () => ({
+  AudioModule: {
+    requestRecordingPermissionsAsync: jest.fn(async () => ({ granted: false })),
   },
+  setAudioModeAsync: jest.fn(async () => undefined),
+  RecordingPresets: { HIGH_QUALITY: {} },
+  useAudioRecorder: jest.fn(() => ({
+    prepareToRecordAsync: jest.fn(async () => undefined),
+    record: jest.fn(),
+    stop: jest.fn(async () => undefined),
+    uri: "file:///tmp/a.m4a",
+  })),
 }));
 
 jest.mock("../src/shared/haptics", () => ({ haptic: jest.fn(async () => undefined) }));
 jest.mock("../src/shared/toast", () => ({ showToast: jest.fn() }));
 
-import { Audio } from "expo-av";
+import { AudioModule, setAudioModeAsync, useAudioRecorder } from "expo-audio";
 import {
   fetchDrills,
   createPracticeSession,
@@ -110,11 +110,11 @@ describe("DrillsScreen", () => {
 describe("PracticeScreen edge states", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (Audio.requestPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
+    (AudioModule.requestRecordingPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
   });
 
   it("shows mic permission error", async () => {
-    (Audio.requestPermissionsAsync as jest.Mock).mockResolvedValueOnce({ granted: false });
+    (AudioModule.requestRecordingPermissionsAsync as jest.Mock).mockResolvedValueOnce({ granted: false });
     const navigation = { replace: jest.fn() } as any;
     const route = { params: { lessonId: "l1", prompt: "hello" } } as any;
     const screen = render(<PracticeScreen navigation={navigation} route={route} />);
@@ -135,10 +135,17 @@ describe("PracticeScreen edge states", () => {
   it("submits successfully when audio uri exists", async () => {
     const useStateSpy = jest.spyOn(ReactModule, "useState");
     useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [false, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["file:///tmp/a.m4a", jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => ["idle", jest.fn()]);
     useStateSpy.mockImplementation(() => [null, jest.fn()]);
+    (useAudioRecorder as jest.Mock).mockReturnValue({
+      prepareToRecordAsync: jest.fn(async () => undefined),
+      record: jest.fn(),
+      stop: jest.fn(async () => undefined),
+      uri: "file:///tmp/a.m4a",
+    });
 
     (createPracticeSession as jest.Mock).mockResolvedValue({ session_id: "s1" });
     (uploadPracticeAudio as jest.Mock).mockResolvedValue({ status: "uploaded" });
@@ -172,10 +179,17 @@ describe("PracticeScreen edge states", () => {
   it("shows failed status error", async () => {
     const useStateSpy = jest.spyOn(ReactModule, "useState");
     useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [false, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["file:///tmp/a.m4a", jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => ["idle", jest.fn()]);
     useStateSpy.mockImplementation(() => [null, jest.fn()]);
+    (useAudioRecorder as jest.Mock).mockReturnValue({
+      prepareToRecordAsync: jest.fn(async () => undefined),
+      record: jest.fn(),
+      stop: jest.fn(async () => undefined),
+      uri: "file:///tmp/a.m4a",
+    });
 
     (createPracticeSession as jest.Mock).mockResolvedValue({ session_id: "s2" });
     (uploadPracticeAudio as jest.Mock).mockResolvedValue({ status: "uploaded" });
@@ -195,10 +209,17 @@ describe("PracticeScreen edge states", () => {
   it("shows timeout fallback", async () => {
     const useStateSpy = jest.spyOn(ReactModule, "useState");
     useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [false, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["file:///tmp/a.m4a", jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => ["idle", jest.fn()]);
     useStateSpy.mockImplementation(() => [null, jest.fn()]);
+    (useAudioRecorder as jest.Mock).mockReturnValue({
+      prepareToRecordAsync: jest.fn(async () => undefined),
+      record: jest.fn(),
+      stop: jest.fn(async () => undefined),
+      uri: "file:///tmp/a.m4a",
+    });
 
     (createPracticeSession as jest.Mock).mockResolvedValue({ session_id: "s4" });
     (uploadPracticeAudio as jest.Mock).mockResolvedValue({ status: "uploaded" });
@@ -218,10 +239,17 @@ describe("PracticeScreen edge states", () => {
   it("uses generic scoring failed fallback when timeout issue has missing message", async () => {
     const useStateSpy = jest.spyOn(ReactModule, "useState");
     useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [false, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["file:///tmp/a.m4a", jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => ["idle", jest.fn()]);
     useStateSpy.mockImplementation(() => [null, jest.fn()]);
+    (useAudioRecorder as jest.Mock).mockReturnValue({
+      prepareToRecordAsync: jest.fn(async () => undefined),
+      record: jest.fn(),
+      stop: jest.fn(async () => undefined),
+      uri: "file:///tmp/a.m4a",
+    });
 
     (createPracticeSession as jest.Mock).mockResolvedValue({ session_id: "s4b" });
     (uploadPracticeAudio as jest.Mock).mockResolvedValue({ status: "uploaded" });
@@ -240,8 +268,8 @@ describe("PracticeScreen edge states", () => {
 
   it("covers recording stop branch with injected recording state", async () => {
     const rec = {
-      stopAndUnloadAsync: jest.fn(async () => undefined),
-      getURI: jest.fn(() => "file:///tmp/a.m4a"),
+      stop: jest.fn(async () => undefined),
+      uri: "file:///tmp/a.m4a",
     };
 
     const useStateSpy = jest.spyOn(ReactModule, "useState");
@@ -250,6 +278,7 @@ describe("PracticeScreen edge states", () => {
     useStateSpy.mockImplementationOnce(() => [rec as any, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
     useStateSpy.mockImplementation(() => [null, jest.fn()]);
+    (useAudioRecorder as jest.Mock).mockReturnValue(rec);
 
     const navigation = { replace: jest.fn() } as any;
     const route = { params: { lessonId: "l1", prompt: "hello" } } as any;
@@ -258,8 +287,7 @@ describe("PracticeScreen edge states", () => {
     fireEvent.press(screen.getByText("Stop recording"));
 
     await waitFor(() => {
-      expect(rec.stopAndUnloadAsync).toHaveBeenCalled();
-      expect(rec.getURI).toHaveBeenCalled();
+      expect(rec.stop).toHaveBeenCalled();
     });
     useStateSpy.mockRestore();
   });
@@ -270,8 +298,7 @@ describe("PracticeScreen edge states", () => {
     const setSubmitStage = jest.fn();
 
     useStateSpy.mockImplementationOnce(() => [true, setSubmitting]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [false, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["polling", setSubmitStage]);
@@ -291,10 +318,17 @@ describe("PracticeScreen edge states", () => {
   it("covers polling timeout throw at max attempts", async () => {
     const useStateSpy = jest.spyOn(ReactModule, "useState");
     useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [false, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["file:///tmp/a.m4a", jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => ["idle", jest.fn()]);
     useStateSpy.mockImplementation(() => [null, jest.fn()]);
+    (useAudioRecorder as jest.Mock).mockReturnValue({
+      prepareToRecordAsync: jest.fn(async () => undefined),
+      record: jest.fn(),
+      stop: jest.fn(async () => undefined),
+      uri: "file:///tmp/a.m4a",
+    });
 
     (createPracticeSession as jest.Mock).mockResolvedValue({ session_id: "s8" });
     (uploadPracticeAudio as jest.Mock).mockResolvedValue({ status: "uploaded" });
@@ -315,10 +349,17 @@ describe("PracticeScreen edge states", () => {
   it("covers scoring not finished fallback branch", async () => {
     const useStateSpy = jest.spyOn(ReactModule, "useState");
     useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
-    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [false, jest.fn()]);
     useStateSpy.mockImplementationOnce(() => ["file:///tmp/a.m4a", jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => [null, jest.fn()]);
+    useStateSpy.mockImplementationOnce(() => ["idle", jest.fn()]);
     useStateSpy.mockImplementation(() => [null, jest.fn()]);
+    (useAudioRecorder as jest.Mock).mockReturnValue({
+      prepareToRecordAsync: jest.fn(async () => undefined),
+      record: jest.fn(),
+      stop: jest.fn(async () => undefined),
+      uri: "file:///tmp/a.m4a",
+    });
 
     (createPracticeSession as jest.Mock).mockResolvedValue({ session_id: "s9" });
     (uploadPracticeAudio as jest.Mock).mockResolvedValue({ status: "uploaded" });
@@ -340,31 +381,31 @@ describe("PracticeScreen edge states", () => {
   it("covers recording setup success path", async () => {
     const rec = {
       prepareToRecordAsync: jest.fn(async () => undefined),
-      startAsync: jest.fn(async () => undefined),
-      stopAndUnloadAsync: jest.fn(async () => undefined),
-      getURI: jest.fn(() => "file:///tmp/a.m4a"),
+      record: jest.fn(),
+      stop: jest.fn(async () => undefined),
+      uri: "file:///tmp/a.m4a",
     };
-    (Audio.Recording as unknown as jest.Mock).mockImplementation(() => rec);
+    (useAudioRecorder as jest.Mock).mockReturnValue(rec);
 
     const navigation = { replace: jest.fn() } as any;
     const route = { params: { lessonId: "l1", prompt: "hello" } } as any;
     const screen = render(<PracticeScreen navigation={navigation} route={route} />);
 
     fireEvent.press(screen.getByText("Start recording"));
-    await waitFor(() => expect(Audio.setAudioModeAsync).toHaveBeenCalled());
+    await waitFor(() => expect(setAudioModeAsync).toHaveBeenCalled());
     expect(rec.prepareToRecordAsync).toHaveBeenCalled();
-    expect(rec.startAsync).toHaveBeenCalled();
+    expect(rec.record).toHaveBeenCalled();
   });
 
   it("covers recording setup failure catch path", async () => {
-    (Audio.Recording as unknown as jest.Mock).mockImplementation(() => ({
+    (useAudioRecorder as jest.Mock).mockReturnValue({
       prepareToRecordAsync: jest.fn(async () => undefined),
-      startAsync: jest.fn(async () => {
+      record: jest.fn(() => {
         throw new Error("start failed");
       }),
-      stopAndUnloadAsync: jest.fn(async () => undefined),
-      getURI: jest.fn(() => "file:///tmp/a.m4a"),
-    }));
+      stop: jest.fn(async () => undefined),
+      uri: "file:///tmp/a.m4a",
+    });
 
     const navigation = { replace: jest.fn() } as any;
     const route = { params: { lessonId: "l1", prompt: "hello" } } as any;
@@ -372,6 +413,6 @@ describe("PracticeScreen edge states", () => {
 
     fireEvent.press(screen.getByText("Start recording"));
     await waitFor(() => expect(showToast).not.toHaveBeenCalledWith("Scoring complete!", "success"));
-    expect((Audio.requestPermissionsAsync as jest.Mock)).toHaveBeenCalled();
+    expect((AudioModule.requestRecordingPermissionsAsync as jest.Mock)).toHaveBeenCalled();
   });
 });

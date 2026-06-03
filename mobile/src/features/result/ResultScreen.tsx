@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Button, Card, Text } from "react-native-paper";
+import { Pressable } from "react-native";
 import { RootStackParamList } from "../../navigation/types";
 import { useAppColors } from "../../shared/useAppColors";
 import { MetricBar, Screen, ScorePill, SectionCard } from "../../shared/ui";
@@ -73,6 +74,24 @@ export function ResultScreen({
           </View>
         </Card.Content>
       </SectionCard>
+
+      <View style={s.actionRow}>
+        <Button
+          mode="contained"
+          buttonColor={colors.primary}
+          textColor="#04111F"
+          onPress={() => navigation.navigate("Progress")}
+        >
+          {t("result.view_progress")}
+        </Button>
+        <Button
+          mode="outlined"
+          textColor={colors.text}
+          onPress={() => navigation.navigate("Home")}
+        >
+          {t("result.back_home")}
+        </Button>
+      </View>
 
       <SectionCard>
         <Card.Content style={s.contentBlock}>
@@ -174,48 +193,63 @@ export function ResultScreen({
         </Card.Content>
       </SectionCard>
 
-      <Button
-        mode="contained"
-        buttonColor={colors.primary}
-        textColor="#04111F"
-        onPress={() => navigation.navigate("Progress")}
-      >
-        {t("result.view_progress")}
-      </Button>
-      <Button
-        mode="text"
-        textColor={colors.text}
-        onPress={() => navigation.navigate("Home")}
-      >
-        {t("result.back_home")}
-      </Button>
+      <View style={s.actionRow}>
+        <Button
+          mode="contained"
+          buttonColor={colors.primary}
+          textColor="#04111F"
+          contentStyle={s.actionButton}
+          onPress={() => navigation.navigate("Progress")}
+        >
+          {t("result.view_progress")}
+        </Button>
+        <Button
+          mode="outlined"
+          textColor={colors.text}
+          contentStyle={s.actionButton}
+          onPress={() => navigation.navigate("Home")}
+        >
+          {t("result.back_home")}
+        </Button>
+      </View>
     </Screen>
   );
 }
 
 const styles = (colors: AppColors) =>
   StyleSheet.create({
-    hero: { gap: 14, alignItems: "center" },
-    heroLabel: { color: colors.primary, fontSize: 13, fontWeight: "800" },
-    heroScore: { color: colors.text, fontSize: 64, fontWeight: "900" },
+    hero: { gap: 16, alignItems: "center", paddingVertical: 4 },
+    heroLabel: { color: colors.primary, fontSize: 13, fontWeight: "800", letterSpacing: 0.6 },
+    heroScore: { color: colors.text, fontSize: 72, fontWeight: "900", lineHeight: 78 },
     heroText: {
       color: colors.muted,
       fontSize: 15,
       lineHeight: 22,
       textAlign: "center",
+      maxWidth: 360,
     },
-    pillRow: { flexDirection: "row", gap: 10 },
+    pillRow: { flexDirection: "row", gap: 10, flexWrap: "wrap", justifyContent: "center" },
     contentBlock: { gap: 14 },
-    sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "700" },
+    sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
     wordWrap: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
     wordChip: {
       borderWidth: 1,
-      borderRadius: 16,
+      borderColor: colors.border,
+      borderRadius: 18,
       paddingHorizontal: 14,
-      paddingVertical: 10,
+      paddingVertical: 12,
       backgroundColor: colors.surfaceAlt,
+      minWidth: 96,
+      gap: 2,
+      shadowColor: "#000",
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 3 },
+      elevation: 1,
     },
-    wordText: { color: colors.text, fontWeight: "700" },
-    wordScore: { marginTop: 4, fontWeight: "700" },
+    wordText: { color: colors.text, fontWeight: "800" },
+    wordScore: { marginTop: 2, fontWeight: "800" },
     tipText: { color: colors.muted, fontSize: 15, lineHeight: 22 },
+    actionRow: { gap: 10 },
+    actionButton: { height: 52 },
   });

@@ -1,6 +1,6 @@
 import React, { PropsWithChildren } from "react";
 import { StyleSheet, View } from "react-native";
-import { Card, ProgressBar, Text } from "react-native-paper";
+import { ProgressBar, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { radius, spacing, typography } from "./theme";
 import { useAppColors } from "./useAppColors";
@@ -29,15 +29,18 @@ export function SectionCard({ children }: PropsWithChildren) {
   const styles = StyleSheet.create({
     card: {
       backgroundColor: colors.surface,
-      borderRadius: radius.lg,
-      padding: spacing.xs,
+      borderRadius: radius.xl,
+      padding: spacing.sm,
+      borderWidth: 1,
+      borderColor: colors.border,
+      shadowColor: "#000",
+      shadowOpacity: 0.08,
+      shadowRadius: 14,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 2,
     },
   });
-  return (
-    <Card style={styles.card} mode="contained">
-      {children}
-    </Card>
-  );
+  return <View style={styles.card}>{children}</View>;
 }
 
 export function ScorePill({ label, value }: { label: string; value: string }) {
@@ -45,14 +48,16 @@ export function ScorePill({ label, value }: { label: string; value: string }) {
   const styles = StyleSheet.create({
     pill: {
       backgroundColor: colors.surfaceAlt,
-      borderRadius: radius.md,
+      borderRadius: radius.lg,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
-      gap: 1,
+      gap: 2,
       minWidth: 88,
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     pillLabel: { color: colors.muted, ...typography.caption },
-    pillValue: { color: colors.text, fontSize: 17, fontWeight: "700" },
+    pillValue: { color: colors.text, fontSize: 17, fontWeight: "800" },
   });
 
   return (
@@ -73,9 +78,9 @@ export function MetricBar({ label, value }: { label: string; value: number }) {
       justifyContent: "space-between",
       alignItems: "center",
     },
-    metricLabel: { color: colors.text, ...typography.body, fontWeight: "600" },
+    metricLabel: { color: colors.text, ...typography.body, fontWeight: "700" },
     metricValue: { color: colors.primary, ...typography.label, fontWeight: "800" },
-    progress: { height: 9, borderRadius: radius.full, backgroundColor: colors.border },
+    progress: { height: 10, borderRadius: radius.full, backgroundColor: colors.border },
   });
 
   return (
@@ -92,3 +97,4 @@ export function MetricBar({ label, value }: { label: string; value: number }) {
     </View>
   );
 }
+

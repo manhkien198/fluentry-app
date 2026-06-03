@@ -83,8 +83,6 @@ This project must be deployable, not just runnable on localhost.
 - `SSO_VERIFY_SIGNATURE` (`true` in production)
 - `SSO_GOOGLE_AUDIENCE` (required when Google SSO signature verification is enabled)
 - `SSO_GOOGLE_ISSUER` (default `https://accounts.google.com`)
-- `SSO_APPLE_AUDIENCE` (required when Apple SSO signature verification is enabled)
-- `SSO_APPLE_ISSUER` (default `https://appleid.apple.com`)
 - Mobile OAuth config:
   - `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` must be set for real Google login redirect flow
 
