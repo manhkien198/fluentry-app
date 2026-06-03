@@ -1,8 +1,10 @@
 /* istanbul ignore file */
 import React, { PropsWithChildren, useEffect, useMemo } from "react";
 import { haptic } from "./haptics";
-import { Animated, Pressable, StyleProp, ViewStyle } from "react-native";
+import { Animated, Pressable, StyleProp, ViewStyle, Platform } from "react-native";
 import { motion } from "./theme";
+
+const canUseNativeDriver = Platform.OS !== "web";
 
 export function FadeIn({
   children,
@@ -17,12 +19,12 @@ export function FadeIn({
       Animated.timing(opacity, {
         toValue: 1,
         duration: durationMs,
-        useNativeDriver: true,
+        useNativeDriver: canUseNativeDriver,
       }),
       Animated.timing(translateY, {
         toValue: 0,
         duration: durationMs,
-        useNativeDriver: true,
+        useNativeDriver: canUseNativeDriver,
       }),
     ]).start();
   }, [durationMs, opacity, translateY]);
@@ -49,7 +51,7 @@ export function PressScale({
   const animateTo = (toValue: number) => {
     Animated.spring(scale, {
       toValue,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== "web",
       speed: motion.springSpeed,
       bounciness: motion.springBounciness,
     }).start();

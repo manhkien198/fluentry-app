@@ -1,14 +1,14 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import {
+  Button,
   Card,
   SegmentedButtons,
-  Text,
-  Button,
   Switch,
+  Text,
 } from "react-native-paper";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Screen, SectionCard } from "../../shared/ui";
-import { useAppStore } from "../../shared/store";
 import { appConfig } from "../../shared/config";
 import { clearAuthTokens } from "../../shared/authStorage";
 import { haptic } from "../../shared/haptics";
@@ -19,9 +19,11 @@ import {
   saveThemeMode,
 } from "../../shared/settingsStorage";
 import { useAppColors } from "../../shared/useAppColors";
+import { useAppStore } from "../../shared/store";
 import { t } from "../../shared/i18n";
 import { RootStackParamList } from "../../navigation/types";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { radius, spacing } from "../../shared/theme";
+import type { AppColors } from "../../shared/theme";
 
 export function SettingsScreen({
   navigation,
@@ -35,32 +37,20 @@ export function SettingsScreen({
   const locale = useAppStore((state) => state.locale);
   const setLocale = useAppStore((state) => state.setLocale);
 
-  const styles = StyleSheet.create({
-    block: { gap: 14 },
-    title: { color: colors.text, fontSize: 24, fontWeight: "800" },
-    sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "700" },
-    line: { color: colors.muted, fontSize: 15, lineHeight: 22 },
-    valueBox: {
-      backgroundColor: colors.surfaceAlt,
-      borderRadius: 12,
-      padding: 12,
-      gap: 8,
-    },
-    value: { color: colors.text, fontSize: 13 },
-  });
+  const s = styles(colors);
 
   return (
     <Screen>
       <SectionCard>
-        <Card.Content style={styles.block}>
-          <Text style={styles.title}>{t("settings.title")}</Text>
-          <Text style={styles.line}>{t("settings.subtitle")}</Text>
+        <Card.Content style={s.block}>
+          <Text style={s.title}>{t("settings.title")}</Text>
+          <Text style={s.line}>{t("settings.subtitle")}</Text>
         </Card.Content>
       </SectionCard>
 
       <SectionCard>
-        <Card.Content style={styles.block}>
-          <Text style={styles.sectionTitle}>{t("settings.theme")}</Text>
+        <Card.Content style={s.block}>
+          <Text style={s.sectionTitle}>{t("settings.theme")}</Text>
           <SegmentedButtons
             value={themeMode}
             onValueChange={async (value) => {
@@ -77,8 +67,8 @@ export function SettingsScreen({
       </SectionCard>
 
       <SectionCard>
-        <Card.Content style={styles.block}>
-          <Text style={styles.sectionTitle}>{t("settings.language")}</Text>
+        <Card.Content style={s.block}>
+          <Text style={s.sectionTitle}>{t("settings.language")}</Text>
           <SegmentedButtons
             value={locale}
             onValueChange={async (value) => {
@@ -95,16 +85,10 @@ export function SettingsScreen({
       </SectionCard>
 
       <SectionCard>
-        <Card.Content style={styles.block}>
-          <Text style={styles.sectionTitle}>{t("settings.haptics")}</Text>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Text style={styles.line}>{t("settings.haptics_description")}</Text>
+        <Card.Content style={s.block}>
+          <Text style={s.sectionTitle}>{t("settings.haptics")}</Text>
+          <View style={s.row}>
+            <Text style={s.line}>{t("settings.haptics_description")}</Text>
             <Switch
               value={hapticsEnabled}
               onValueChange={async (value) => {
@@ -117,15 +101,13 @@ export function SettingsScreen({
       </SectionCard>
 
       <SectionCard>
-        <Card.Content style={styles.block}>
-          <Text style={styles.sectionTitle}>
-            {t("settings.api_sso_config")}
-          </Text>
-          <View style={styles.valueBox}>
-            <Text style={styles.value}>
+        <Card.Content style={s.block}>
+          <Text style={s.sectionTitle}>{t("settings.api_sso_config")}</Text>
+          <View style={s.valueBox}>
+            <Text style={s.value}>
               {t("settings.api_value", { value: appConfig.apiBaseUrl })}
             </Text>
-            <Text style={styles.value}>
+            <Text style={s.value}>
               {t("settings.google_configured", {
                 value:
                   appConfig.googleWebClientId || appConfig.googleExpoClientId
@@ -133,23 +115,18 @@ export function SettingsScreen({
                     : t("common.no"),
               })}
             </Text>
-            <Text style={styles.value}>
-              {t("settings.apple_service_id", {
-                value: appConfig.appleServiceId
-                  ? t("common.set")
-                  : t("common.missing"),
-              })}
-            </Text>
           </View>
         </Card.Content>
       </SectionCard>
 
       <SectionCard>
-        <Card.Content style={styles.block}>
-          <Text style={styles.sectionTitle}>{t("settings.session")}</Text>
+        <Card.Content style={s.block}>
+          <Text style={s.sectionTitle}>{t("settings.session")}</Text>
           <Button
-            mode="outlined"
+            mode="contained-tonal"
+            buttonColor={colors.surfaceAlt}
             textColor={colors.danger}
+            contentStyle={{ height: 50 }}
             onPress={async () => {
               await clearAuthTokens();
               showToast(t("toast.signed_out"), "info");
@@ -165,3 +142,26 @@ export function SettingsScreen({
     </Screen>
   );
 }
+
+const styles = (colors: AppColors) =>
+  StyleSheet.create({
+    block: { gap: 14 },
+    title: { color: colors.text, fontSize: 24, fontWeight: "800" },
+    sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
+    line: { color: colors.muted, fontSize: 15, lineHeight: 22 },
+    row: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: spacing.md,
+    },
+    valueBox: {
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      gap: spacing.sm,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    value: { color: colors.text, fontSize: 13, lineHeight: 20 },
+  });

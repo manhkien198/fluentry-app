@@ -1,5 +1,9 @@
 import axios from "axios";
-import { classifyNetworkIssue, getErrorMessage } from "../src/shared/api";
+import {
+  classifyNetworkIssue,
+  getErrorMessage,
+  isRetryableError,
+} from "../src/shared/api";
 
 describe("shared/api error helpers", () => {
   afterEach(() => {
@@ -16,6 +20,15 @@ describe("shared/api error helpers", () => {
       expect(getErrorMessage(error)).toBe("Bad credentials");
     });
 
+    it("returns message from axios response message when detail is absent", () => {
+      const error = {
+        isAxiosError: true,
+        response: { data: { message: "Fallback message" } },
+      } as unknown;
+
+      expect(getErrorMessage(error)).toBe("Fallback message");
+    });
+
     it("returns message from generic Error", () => {
       expect(getErrorMessage(new Error("boom"))).toBe("boom");
     });
@@ -24,6 +37,20 @@ describe("shared/api error helpers", () => {
       expect(getErrorMessage({})).toBeNull();
       expect(getErrorMessage(null)).toBeNull();
     });
+  });
+
+  describe("isRetryableError", () => {
+    it("returns true for non-axios timeout-shaped objects", () => {
+      expect(isRetryableError({ code: "ECONNABORTED" })).toBe(true);
+    });
+
+    it("returns false for unrelated values", () => {
+      expect(isRetryableError({ code: "OTHER" })).toBe(false);
+      expect(isRetryableError(null)).toBe(false);
+    });
+  });
+
+  describe("classifyNetworkIssue", () => {
   });
 
   describe("classifyNetworkIssue", () => {

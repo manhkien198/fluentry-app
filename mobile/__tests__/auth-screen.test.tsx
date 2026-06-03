@@ -9,14 +9,9 @@ jest.mock("expo-auth-session/providers/google", () => ({
   useAuthRequest: jest.fn(() => [{}, null, jest.fn(async () => ({ type: "dismiss" }))]),
 }));
 
-jest.mock("expo-apple-authentication", () => ({
-  isAvailableAsync: jest.fn(async () => false),
-  signInAsync: jest.fn(),
-  AppleAuthenticationScope: { FULL_NAME: "FULL_NAME", EMAIL: "EMAIL" },
-}));
-
 jest.mock("../src/shared/config", () => ({
   appConfig: {
+    apiBaseUrl: "https://api.test.local",
     googleWebClientId: "",
     googleExpoClientId: "",
   },
@@ -30,48 +25,46 @@ jest.mock("../src/shared/authStorage", () => ({
 jest.mock("../src/shared/api", () => ({
   loginWithEmail: jest.fn(),
   registerWithEmail: jest.fn(),
-  verifyEmail: jest.fn(),
-  resendVerification: jest.fn(),
   requestPasswordReset: jest.fn(),
   confirmPasswordReset: jest.fn(),
   loginWithSSO: jest.fn(),
-  getErrorMessage: jest.fn((e: any) => e?.message || "error"),
+  getErrorMessage: jest.fn((e: any) =>
+    e?.response?.data?.detail || e?.response?.data?.message || e?.message || "error",
+  ),
+  classifyNetworkIssue: jest.fn((e: any) => {
+    if (e?.code === "ECONNABORTED") return "timeout";
+    if (e?.response?.status >= 500) return "server";
+    if (e?.isAxiosError && !e?.response) return "offline";
+    return "unknown";
+  }),
 }));
 
-import { Alert, Platform, TextInput } from "react-native";
+import { TextInput } from "react-native";
 import { useAppStore } from "../src/shared/store";
 import { AuthScreen } from "../src/features/auth/AuthScreen";
 import {
   loginWithEmail,
   registerWithEmail,
-  verifyEmail,
-  resendVerification,
   requestPasswordReset,
   confirmPasswordReset,
   loginWithSSO,
   getErrorMessage,
 } from "../src/shared/api";
 import * as Google from "expo-auth-session/providers/google";
-import * as AppleAuthentication from "expo-apple-authentication";
 import { appConfig } from "../src/shared/config";
 
 describe("AuthScreen", () => {
-  const setAlert = () =>
-    jest.spyOn(Alert, "alert").mockImplementation(() => {});
-
   beforeEach(() => {
     jest.clearAllMocks();
     useAppStore.setState({ accessToken: null } as any);
-    jest.spyOn(Alert, "alert").mockImplementation(() => {});
     (Google.useAuthRequest as jest.Mock).mockReturnValue([
       {},
       null,
       jest.fn(async () => ({ type: "dismiss" })),
     ]);
-    (AppleAuthentication.isAvailableAsync as jest.Mock).mockResolvedValue(false);
   });
 
-  it("shows validation alert for invalid email", () => {
+  it("shows inline validation for invalid email", () => {
     const navigation = { replace: jest.fn() } as any;
     const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
 
@@ -80,10 +73,34 @@ describe("AuthScreen", () => {
     fireEvent.changeText(inputs[1], "12345678");
     fireEvent.press(screen.getAllByText("Sign in")[1]);
 
-    expect(Alert.alert).toHaveBeenCalled();
+    expect(screen.getAllByText("Please enter a valid email address.").length).toBeGreaterThan(0);
   });
 
-  it("shows validation alert for short password", () => {
+  it("allows sign in when api base url uses the public IP", async () => {
+    (appConfig as any).apiBaseUrl = "http://103.45.234.100";
+    (loginWithEmail as jest.Mock).mockResolvedValue({
+      access_token: "token-a",
+      refresh_token: "token-r",
+    });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "user@example.com");
+    fireEvent.changeText(inputs[1], "secret123");
+    fireEvent.press(screen.getAllByText("Sign in")[1]);
+
+    await waitFor(() => {
+      expect(loginWithEmail).toHaveBeenCalledWith({
+        email: "user@example.com",
+        password: "secret123",
+      });
+      expect(navigation.replace).toHaveBeenCalledWith("Home");
+    });
+    (appConfig as any).apiBaseUrl = "https://api.test.local";
+  });
+
+  it("shows inline validation for short password", () => {
     const navigation = { replace: jest.fn() } as any;
     const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
 
@@ -92,10 +109,10 @@ describe("AuthScreen", () => {
     fireEvent.changeText(inputs[1], "123");
     fireEvent.press(screen.getAllByText("Sign in")[1]);
 
-    expect(Alert.alert).toHaveBeenCalled();
+    expect(screen.getAllByText("Password must be at least 8 characters.").length).toBeGreaterThan(0);
   });
 
-  it("shows validation alerts for signup missing full name and password mismatch", () => {
+  it("shows inline validation for signup missing full name and password mismatch", () => {
     const navigation = { replace: jest.fn() } as any;
     const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
 
@@ -106,7 +123,7 @@ describe("AuthScreen", () => {
     fireEvent.changeText(inputs[2], "secret123");
     fireEvent.changeText(inputs[3], "secret123");
     fireEvent.press(screen.getAllByText("Sign up")[1]);
-    expect(Alert.alert).toHaveBeenCalled();
+    expect(screen.getAllByText("Please enter your full name.").length).toBeGreaterThan(0);
 
     inputs = screen.UNSAFE_getAllByType(TextInput);
     fireEvent.changeText(inputs[0], "Test User");
@@ -114,7 +131,15 @@ describe("AuthScreen", () => {
     fireEvent.changeText(inputs[2], "secret123");
     fireEvent.changeText(inputs[3], "mismatch123");
     fireEvent.press(screen.getAllByText("Sign up")[1]);
-    expect(Alert.alert).toHaveBeenCalled();
+    expect(screen.getAllByText("Passwords do not match.").length).toBeGreaterThan(0);
+  });
+
+  it("redirects to home when access token already exists", async () => {
+    useAppStore.setState({ accessToken: "existing-token" } as any);
+    const navigation = { replace: jest.fn() } as any;
+    render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith("Home"));
   });
 
   it("signs in and navigates home", async () => {
@@ -137,51 +162,8 @@ describe("AuthScreen", () => {
     });
   });
 
-  it("handles signup then verify step", async () => {
-    (registerWithEmail as jest.Mock).mockResolvedValue({ verificationToken: "abc-123" });
-
-    const navigation = { replace: jest.fn() } as any;
-    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
-
-    fireEvent.press(screen.getByText("Sign up"));
-    const inputs = screen.UNSAFE_getAllByType(TextInput);
-    fireEvent.changeText(inputs[0], "Test User");
-    fireEvent.changeText(inputs[1], "new@example.com");
-    fireEvent.changeText(inputs[2], "secret123");
-    fireEvent.changeText(inputs[3], "secret123");
-    fireEvent.press(screen.getAllByText("Sign up")[1]);
-
-    await waitFor(() => {
-      expect(registerWithEmail).toHaveBeenCalled();
-      expect(screen.getByText("Verify email")).toBeTruthy();
-    });
-  });
-
-  it("resends verification token", async () => {
-    (registerWithEmail as jest.Mock).mockResolvedValue({ verificationToken: "abc-123" });
-    (resendVerification as jest.Mock).mockResolvedValue({ token: "new-token" });
-
-    const navigation = { replace: jest.fn() } as any;
-    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
-
-    fireEvent.press(screen.getByText("Sign up"));
-    const inputs = screen.UNSAFE_getAllByType(TextInput);
-    fireEvent.changeText(inputs[0], "Test User");
-    fireEvent.changeText(inputs[1], "new@example.com");
-    fireEvent.changeText(inputs[2], "secret123");
-    fireEvent.changeText(inputs[3], "secret123");
-    fireEvent.press(screen.getAllByText("Sign up")[1]);
-
-    await waitFor(() => expect(screen.getByText("Resend verification")));
-    fireEvent.press(screen.getByText("Resend verification"));
-
-    await waitFor(() => expect(resendVerification).toHaveBeenCalled());
-  });
-
-  it("verifies email then logs in", async () => {
-    (registerWithEmail as jest.Mock).mockResolvedValue({ verificationToken: "abc-123" });
-    (verifyEmail as jest.Mock).mockResolvedValue({ status: "verified" });
-    (loginWithEmail as jest.Mock).mockResolvedValue({
+  it("registers and navigates home", async () => {
+    (registerWithEmail as jest.Mock).mockResolvedValue({
       access_token: "token-a",
       refresh_token: "token-r",
     });
@@ -197,20 +179,14 @@ describe("AuthScreen", () => {
     fireEvent.changeText(inputs[3], "secret123");
     fireEvent.press(screen.getAllByText("Sign up")[1]);
 
-    await waitFor(() => expect(screen.getByText("Verify email")));
-    const verifyInputs = screen.UNSAFE_getAllByType(TextInput);
-    fireEvent.changeText(verifyInputs[0], "abc-123");
-    fireEvent.press(screen.getByText("Verify email"));
-
     await waitFor(() => {
-      expect(verifyEmail).toHaveBeenCalledWith("abc-123");
-      expect(loginWithEmail).toHaveBeenCalled();
+      expect(registerWithEmail).toHaveBeenCalled();
       expect(navigation.replace).toHaveBeenCalledWith("Home");
     });
   });
 
-  it("shows alert when verify token empty", async () => {
-    (registerWithEmail as jest.Mock).mockResolvedValue({ verificationToken: "abc-123" });
+  it("shows inline error when register fails", async () => {
+    (registerWithEmail as jest.Mock).mockRejectedValue(new Error("bad register"));
 
     const navigation = { replace: jest.fn() } as any;
     const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
@@ -223,36 +199,7 @@ describe("AuthScreen", () => {
     fireEvent.changeText(inputs[3], "secret123");
     fireEvent.press(screen.getAllByText("Sign up")[1]);
 
-    await waitFor(() => expect(screen.getByText("Verify email")));
-    fireEvent.changeText(screen.UNSAFE_getAllByType(TextInput)[0], "");
-    fireEvent.press(screen.getByText("Verify email"));
-
-    expect(Alert.alert).toHaveBeenCalled();
-  });
-
-  it("handles verify and resend failures", async () => {
-    (registerWithEmail as jest.Mock).mockResolvedValue({ verificationToken: "abc-123" });
-    (verifyEmail as jest.Mock).mockRejectedValue(new Error("bad token"));
-    (resendVerification as jest.Mock).mockRejectedValue(new Error("resend failed"));
-
-    const navigation = { replace: jest.fn() } as any;
-    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
-
-    fireEvent.press(screen.getByText("Sign up"));
-    const inputs = screen.UNSAFE_getAllByType(TextInput);
-    fireEvent.changeText(inputs[0], "Test User");
-    fireEvent.changeText(inputs[1], "new@example.com");
-    fireEvent.changeText(inputs[2], "secret123");
-    fireEvent.changeText(inputs[3], "secret123");
-    fireEvent.press(screen.getAllByText("Sign up")[1]);
-
-    await waitFor(() => expect(screen.getByText("Verify email")));
-    fireEvent.changeText(screen.UNSAFE_getAllByType(TextInput)[0], "abc-123");
-    fireEvent.press(screen.getByText("Verify email"));
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalled());
-
-    fireEvent.press(screen.getByText("Resend verification"));
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getAllByText("bad register").length).toBeGreaterThan(0));
   });
 
   it("handles password reset request and confirm flows", async () => {
@@ -263,7 +210,7 @@ describe("AuthScreen", () => {
     const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
 
     fireEvent.press(screen.getByText("Forgot password"));
-    expect(Alert.alert).toHaveBeenCalled();
+    expect(screen.getAllByText("Please enter your email first.").length).toBeGreaterThan(0);
 
     const inputs = screen.UNSAFE_getAllByType(TextInput);
     fireEvent.changeText(inputs[0], "user@example.com");
@@ -272,13 +219,13 @@ describe("AuthScreen", () => {
     fireEvent.press(screen.getByText("Forgot password"));
     await waitFor(() => expect(requestPasswordReset).toHaveBeenCalledWith("user@example.com"));
 
-    await waitFor(() => expect(screen.getByText("Confirm reset")));
+    await waitFor(() => expect(screen.getAllByText("Confirm reset").length).toBeGreaterThan(0));
     const resetInputs = screen.UNSAFE_getAllByType(TextInput);
     const tokenInput = resetInputs[resetInputs.length - 2];
     const newPasswordInput = resetInputs[resetInputs.length - 1];
     fireEvent.changeText(tokenInput, "reset-token");
     fireEvent.changeText(newPasswordInput, "new-secret-123");
-    fireEvent.press(screen.getByText("Confirm reset"));
+    fireEvent.press(screen.getAllByText("Confirm reset")[0]);
 
     await waitFor(() => {
       expect(confirmPasswordReset).toHaveBeenCalledWith({ token: "reset-token", new_password: "new-secret-123" });
@@ -295,20 +242,305 @@ describe("AuthScreen", () => {
     fireEvent.changeText(inputs[1], "secret123");
     fireEvent.press(screen.getAllByText("Sign in")[1]);
 
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getAllByText("auth failed").length).toBeGreaterThan(0));
   });
 
-  it("handles google disabled and missing token branches", async () => {
+  it("shows auth network diagnostics for offline sign up", async () => {
+    (registerWithEmail as jest.Mock).mockRejectedValue({ isAxiosError: true });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    fireEvent.press(screen.getByText("Sign up"));
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "Test User");
+    fireEvent.changeText(inputs[1], "new@example.com");
+    fireEvent.changeText(inputs[2], "secret123");
+    fireEvent.changeText(inputs[3], "secret123");
+    fireEvent.press(screen.getAllByText("Sign up")[1]);
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("Network error while trying to sign up. API: https://api.test.local").length,
+      ).toBeGreaterThan(0),
+    );
+  });
+
+  it("shows auth network diagnostics for timeout sign in", async () => {
+    (loginWithEmail as jest.Mock).mockRejectedValue({ isAxiosError: true, code: "ECONNABORTED" });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "user@example.com");
+    fireEvent.changeText(inputs[1], "secret123");
+    fireEvent.press(screen.getAllByText("Sign in")[1]);
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("Request timed out while trying to sign in. API: https://api.test.local").length,
+      ).toBeGreaterThan(0),
+    );
+  });
+
+  it("shows auth network diagnostics for server sign up error", async () => {
+    (registerWithEmail as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 503 },
+    });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    fireEvent.press(screen.getByText("Sign up"));
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "Test User");
+    fireEvent.changeText(inputs[1], "new@example.com");
+    fireEvent.changeText(inputs[2], "secret123");
+    fireEvent.changeText(inputs[3], "secret123");
+    fireEvent.press(screen.getAllByText("Sign up")[1]);
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("error (server error from https://api.test.local)").length,
+      ).toBeGreaterThan(0),
+    );
+  });
+
+  it("shows api detail for duplicate-email sign up", async () => {
+    (registerWithEmail as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 400, data: { detail: "Email already exists" } },
+    });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    fireEvent.press(screen.getByText("Sign up"));
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "Test User");
+    fireEvent.changeText(inputs[1], "new@example.com");
+    fireEvent.changeText(inputs[2], "secret123");
+    fireEvent.changeText(inputs[3], "secret123");
+    fireEvent.press(screen.getAllByText("Sign up")[1]);
+
+    await waitFor(() => expect(screen.getAllByText("Email already exists").length).toBeGreaterThan(0));
+  });
+
+  it("shows api detail for duplicate-email sign in", async () => {
+    (loginWithEmail as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 401, data: { detail: "Invalid credentials" } },
+    });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "user@example.com");
+    fireEvent.changeText(inputs[1], "secret123");
+    fireEvent.press(screen.getAllByText("Sign in")[1]);
+
+    await waitFor(() => expect(screen.getAllByText("Invalid credentials").length).toBeGreaterThan(0));
+  });
+
+  it("shows api detail for reset request rate limit", async () => {
+    (requestPasswordReset as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 429, data: { detail: "Too many forgot-password attempts" } },
+    });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "user@example.com");
+    fireEvent.changeText(inputs[1], "secret123");
+    fireEvent.press(screen.getByText("Forgot password"));
+
+    await waitFor(() => expect(screen.getAllByText("Too many forgot-password attempts").length).toBeGreaterThan(0));
+  });
+
+  it("shows api detail for reset confirm invalid token", async () => {
+    (requestPasswordReset as jest.Mock).mockResolvedValueOnce({ status: "sent" });
+    (confirmPasswordReset as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 400, data: { detail: "Invalid or expired reset token" } },
+    });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "user@example.com");
+    fireEvent.changeText(inputs[1], "secret123");
+    fireEvent.press(screen.getByText("Forgot password"));
+
+    await waitFor(() => expect(screen.getAllByText("Confirm reset").length).toBeGreaterThan(0));
+    const resetInputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(resetInputs[resetInputs.length - 2], "bad-token");
+    fireEvent.changeText(resetInputs[resetInputs.length - 1], "new-secret");
+    fireEvent.press(screen.getAllByText("Confirm reset")[0]);
+
+    await waitFor(() => expect(screen.getAllByText("Invalid or expired reset token").length).toBeGreaterThan(0));
+  });
+
+  it("shows api detail for google sign-in invalid token", async () => {
+    const navigation = { replace: jest.fn() } as any;
+    (appConfig as any).googleWebClientId = "x";
+    (Google.useAuthRequest as jest.Mock).mockReturnValue([
+      {},
+      null,
+      jest.fn(async () => ({ type: "success", authentication: { idToken: "gid" } })),
+    ]);
+    (loginWithSSO as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 401, data: { detail: "Invalid SSO token" } },
+    });
+
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+    fireEvent.press(screen.getByText("Sign in with Google"));
+    await waitFor(() => expect(screen.getAllByText("Invalid SSO token").length).toBeGreaterThan(0));
+  });
+
+  it("shows api detail for google sign-in missing email", async () => {
+    const navigation = { replace: jest.fn() } as any;
+    (appConfig as any).googleWebClientId = "x";
+    (Google.useAuthRequest as jest.Mock).mockReturnValue([
+      {},
+      null,
+      jest.fn(async () => ({ type: "success", authentication: { idToken: "gid" } })),
+    ]);
+    (loginWithSSO as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 401, data: { detail: "SSO token missing email" } },
+    });
+
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+    fireEvent.press(screen.getByText("Sign in with Google"));
+    await waitFor(() => expect(screen.getAllByText("SSO token missing email").length).toBeGreaterThan(0));
+  });
+
+  it("shows api detail for google sign-in rate limit", async () => {
+    const navigation = { replace: jest.fn() } as any;
+    (appConfig as any).googleWebClientId = "x";
+    (Google.useAuthRequest as jest.Mock).mockReturnValue([
+      {},
+      null,
+      jest.fn(async () => ({ type: "success", authentication: { idToken: "gid" } })),
+    ]);
+    (loginWithSSO as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 429, data: { detail: "Too many SSO attempts" } },
+    });
+
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+    fireEvent.press(screen.getByText("Sign in with Google"));
+    await waitFor(() => expect(screen.getAllByText("Too many SSO attempts").length).toBeGreaterThan(0));
+  });
+
+  it("shows api detail for sign up rate limit", async () => {
+    (registerWithEmail as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 429, data: { detail: "Too many register attempts" } },
+    });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    fireEvent.press(screen.getByText("Sign up"));
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "Test User");
+    fireEvent.changeText(inputs[1], "new@example.com");
+    fireEvent.changeText(inputs[2], "secret123");
+    fireEvent.changeText(inputs[3], "secret123");
+    fireEvent.press(screen.getAllByText("Sign up")[1]);
+
+    await waitFor(() => expect(screen.getAllByText("Too many register attempts").length).toBeGreaterThan(0));
+  });
+
+  it("shows api detail for sign in rate limit", async () => {
+    (loginWithEmail as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 429, data: { detail: "Too many login attempts" } },
+    });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "user@example.com");
+    fireEvent.changeText(inputs[1], "secret123");
+    fireEvent.press(screen.getAllByText("Sign in")[1]);
+
+    await waitFor(() => expect(screen.getAllByText("Too many login attempts").length).toBeGreaterThan(0));
+  });
+
+  it("shows api detail for sign in unverified email", async () => {
+    (loginWithEmail as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 403, data: { detail: "Email not verified" } },
+    });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "user@example.com");
+    fireEvent.changeText(inputs[1], "secret123");
+    fireEvent.press(screen.getAllByText("Sign in")[1]);
+
+    await waitFor(() => expect(screen.getAllByText("Email not verified").length).toBeGreaterThan(0));
+  });
+
+  it("shows api detail for sign up generic backend message", async () => {
+    (registerWithEmail as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 400, data: { message: "Registration blocked" } },
+    });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    fireEvent.press(screen.getByText("Sign up"));
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "Test User");
+    fireEvent.changeText(inputs[1], "new@example.com");
+    fireEvent.changeText(inputs[2], "secret123");
+    fireEvent.changeText(inputs[3], "secret123");
+    fireEvent.press(screen.getAllByText("Sign up")[1]);
+
+    await waitFor(() => expect(screen.getAllByText("Registration blocked").length).toBeGreaterThan(0));
+  });
+
+  it("shows api detail for sign in generic backend message", async () => {
+    (loginWithEmail as jest.Mock).mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 400, data: { message: "Login blocked" } },
+    });
+    const navigation = { replace: jest.fn() } as any;
+    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+
+    const inputs = screen.UNSAFE_getAllByType(TextInput);
+    fireEvent.changeText(inputs[0], "user@example.com");
+    fireEvent.changeText(inputs[1], "secret123");
+    fireEvent.press(screen.getAllByText("Sign in")[1]);
+
+    await waitFor(() => expect(screen.getAllByText("Login blocked").length).toBeGreaterThan(0));
+  });
+
+
+  it("handles google disabled, dismiss, and missing token branches", async () => {
     const navigation = { replace: jest.fn() } as any;
 
     (appConfig as any).googleWebClientId = "";
     (appConfig as any).googleExpoClientId = "";
     let screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
     fireEvent.press(screen.getByText("Sign in with Google"));
-    expect(Alert.alert).toHaveBeenCalled();
+    expect(screen.getAllByText("Missing Google client ID in environment variables.").length).toBeGreaterThan(0);
 
     (appConfig as any).googleWebClientId = "x";
-    (Google.useAuthRequest as jest.Mock).mockReturnValue([
+    (Google.useAuthRequest as jest.Mock).mockReturnValueOnce([
+      {},
+      null,
+      jest.fn(async () => ({ type: "dismiss" })),
+    ]);
+    screen.unmount();
+    screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
+    fireEvent.press(screen.getByText("Sign in with Google"));
+    await waitFor(() => expect(loginWithSSO).not.toHaveBeenCalled());
+
+    (Google.useAuthRequest as jest.Mock).mockReturnValueOnce([
       {},
       null,
       jest.fn(async () => ({ type: "success", authentication: {} })),
@@ -317,10 +549,10 @@ describe("AuthScreen", () => {
     screen.unmount();
     screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
     fireEvent.press(screen.getByText("Sign in with Google"));
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getAllByText("Google did not return token payload.").length).toBeGreaterThan(0));
   });
 
-  it("handles google and apple success flows", async () => {
+  it("handles google success flow", async () => {
     const navigation = { replace: jest.fn() } as any;
     (appConfig as any).googleWebClientId = "x";
     (Google.useAuthRequest as jest.Mock).mockReturnValue([
@@ -329,15 +561,10 @@ describe("AuthScreen", () => {
       jest.fn(async () => ({ type: "success", authentication: { idToken: "gid" } })),
     ]);
     (loginWithSSO as jest.Mock).mockResolvedValue({ access_token: "a", refresh_token: "r" });
-    (AppleAuthentication.isAvailableAsync as jest.Mock).mockResolvedValue(true);
-    (AppleAuthentication.signInAsync as jest.Mock).mockResolvedValue({ identityToken: "aid" });
 
     const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
     fireEvent.press(screen.getByText("Sign in with Google"));
     await waitFor(() => expect(loginWithSSO).toHaveBeenCalledWith("google", "gid"));
-
-    fireEvent.press(screen.getByText("Sign in with Apple"));
-    await waitFor(() => expect(loginWithSSO).toHaveBeenCalledWith("apple", "aid"));
   });
 
   it("handles google token extraction from accessToken and params.id_token", async () => {
@@ -365,20 +592,7 @@ describe("AuthScreen", () => {
     await waitFor(() => expect(loginWithSSO).toHaveBeenCalledWith("google", "g-param-token"));
   });
 
-  it("handles apple disabled press branch repeatedly", async () => {
-    const alertSpy = setAlert();
-    const navigation = { replace: jest.fn() } as any;
-    (AppleAuthentication.isAvailableAsync as jest.Mock).mockResolvedValue(false);
-
-    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
-    fireEvent.press(screen.getByText("Apple (disabled)"));
-    fireEvent.press(screen.getByText("Apple (disabled)"));
-
-    await waitFor(() => expect(alertSpy).toHaveBeenCalled());
-  });
-
   it("handles google prompt failure branch", async () => {
-    const alertSpy = setAlert();
     const navigation = { replace: jest.fn() } as any;
     (appConfig as any).googleWebClientId = "x";
     (Google.useAuthRequest as jest.Mock).mockReturnValue([
@@ -391,26 +605,10 @@ describe("AuthScreen", () => {
 
     const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
     fireEvent.press(screen.getByText("Sign in with Google"));
-    await waitFor(() => expect(alertSpy).toHaveBeenCalled());
-  });
-
-
-  it("handles apple unavailable branch", async () => {
-    const alertSpy = setAlert();
-    (AppleAuthentication.isAvailableAsync as jest.Mock).mockResolvedValue(false);
-    const navigation = { replace: jest.fn() } as any;
-
-    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
-    await waitFor(() => {
-      expect(screen.getByText("Apple (disabled)")).toBeTruthy();
-    });
-
-    fireEvent.press(screen.getByText("Apple (disabled)"));
-    expect(alertSpy).toHaveBeenCalled();
+    await waitFor(() => expect(screen.getAllByText("google failed").length).toBeGreaterThan(0));
   });
 
   it("handles request and confirm reset failures", async () => {
-    const alertSpy = setAlert();
     (requestPasswordReset as jest.Mock).mockRejectedValue(new Error("reset request failed"));
     (confirmPasswordReset as jest.Mock).mockRejectedValue(new Error("confirm failed"));
 
@@ -422,78 +620,21 @@ describe("AuthScreen", () => {
     fireEvent.changeText(inputs[1], "secret123");
 
     fireEvent.press(screen.getByText("Forgot password"));
-    await waitFor(() => expect(alertSpy).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getAllByText("reset request failed").length).toBeGreaterThan(0));
 
     (requestPasswordReset as jest.Mock).mockResolvedValueOnce({ status: "sent" });
     fireEvent.press(screen.getByText("Forgot password"));
-    await waitFor(() => expect(screen.getByText("Confirm reset")).toBeTruthy());
+    await waitFor(() => expect(screen.getAllByText("Confirm reset").length).toBeGreaterThan(0));
 
     const resetInputs = screen.UNSAFE_getAllByType(TextInput);
     fireEvent.changeText(resetInputs[resetInputs.length - 2], "r-token");
     fireEvent.changeText(resetInputs[resetInputs.length - 1], "new-secret");
-    fireEvent.press(screen.getByText("Confirm reset"));
+    fireEvent.press(screen.getAllByText("Confirm reset")[0]);
 
-    await waitFor(() => expect(alertSpy).toHaveBeenCalled());
-  });
-
-  it("handles apple ios-only, missing token and sign-in errors", async () => {
-    const alertSpy = setAlert();
-    const navigation = { replace: jest.fn() } as any;
-    const originalOS = Platform.OS;
-
-    Object.defineProperty(Platform, "OS", { value: "android" });
-    let screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
-    fireEvent.press(screen.getByText("Apple (disabled)"));
-    expect(alertSpy).toHaveBeenCalled();
-
-    screen.unmount();
-    Object.defineProperty(Platform, "OS", { value: "ios" });
-    (AppleAuthentication.isAvailableAsync as jest.Mock).mockResolvedValue(true);
-    (AppleAuthentication.signInAsync as jest.Mock).mockResolvedValue({ identityToken: null });
-    screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
-    await waitFor(() => expect(screen.getByText("Sign in with Apple")).toBeTruthy());
-    fireEvent.press(screen.getByText("Sign in with Apple"));
-    await waitFor(() => expect(alertSpy).toHaveBeenCalled());
-
-    (AppleAuthentication.signInAsync as jest.Mock).mockRejectedValueOnce(new Error("apple failed"));
-    fireEvent.press(screen.getByText("Sign in with Apple"));
-    await waitFor(() => expect(alertSpy).toHaveBeenCalled());
-
-    (AppleAuthentication.signInAsync as jest.Mock).mockRejectedValueOnce({ code: "ERR_REQUEST_CANCELED" });
-    fireEvent.press(screen.getByText("Sign in with Apple"));
-    await waitFor(() => expect(loginWithSSO).toHaveBeenCalledTimes(0));
-
-    Object.defineProperty(Platform, "OS", { value: originalOS });
-  });
-
-  it("handles apple availability check failure and reset validation back flow", async () => {
-    const alertSpy = setAlert();
-    const navigation = { replace: jest.fn() } as any;
-    const originalOS = Platform.OS;
-    Object.defineProperty(Platform, "OS", { value: "ios" });
-    (AppleAuthentication.isAvailableAsync as jest.Mock).mockRejectedValueOnce(new Error("unavailable"));
-
-    const screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
-    await waitFor(() => expect(screen.getByText("Apple (disabled)")).toBeTruthy());
-
-    const inputs = screen.UNSAFE_getAllByType(TextInput);
-    fireEvent.changeText(inputs[0], "user@example.com");
-    fireEvent.changeText(inputs[1], "secret123");
-    (requestPasswordReset as jest.Mock).mockResolvedValueOnce({ status: "sent" });
-    fireEvent.press(screen.getByText("Forgot password"));
-
-    await waitFor(() => expect(screen.getByText("Confirm reset")).toBeTruthy());
-    fireEvent.press(screen.getByText("Confirm reset"));
-    expect(alertSpy).toHaveBeenCalled();
-
-    fireEvent.press(screen.getByText("Back to sign in"));
-    await waitFor(() => expect(screen.queryByText("Confirm reset")).toBeNull());
-
-    Object.defineProperty(Platform, "OS", { value: originalOS });
+    await waitFor(() => expect(screen.getAllByText("confirm failed").length).toBeGreaterThan(0));
   });
 
   it("covers auth fallback messages when getErrorMessage is empty", async () => {
-    const alertSpy = setAlert();
     (getErrorMessage as jest.Mock).mockReturnValue("");
     const navigation = { replace: jest.fn() } as any;
 
@@ -503,6 +644,7 @@ describe("AuthScreen", () => {
     fireEvent.changeText(inputs[0], "user@example.com");
     fireEvent.changeText(inputs[1], "secret123");
     fireEvent.press(screen.getAllByText("Sign in")[1]);
+    await waitFor(() => expect(screen.getAllByText("Unable to authenticate.").length).toBeGreaterThan(0));
 
     screen.unmount();
     (appConfig as any).googleWebClientId = "x";
@@ -515,10 +657,10 @@ describe("AuthScreen", () => {
     ]);
     screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
     fireEvent.press(screen.getByText("Sign in with Google"));
+    await waitFor(() => expect(screen.getAllByText("Google sign-in failed.").length).toBeGreaterThan(0));
 
     screen.unmount();
-    (registerWithEmail as jest.Mock).mockResolvedValueOnce({ verificationToken: "abc-123" });
-    (verifyEmail as jest.Mock).mockRejectedValueOnce(new Error("verify fail"));
+    (registerWithEmail as jest.Mock).mockRejectedValueOnce(new Error("register fail"));
     screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
     fireEvent.press(screen.getByText("Sign up"));
     inputs = screen.UNSAFE_getAllByType(TextInput);
@@ -527,9 +669,7 @@ describe("AuthScreen", () => {
     fireEvent.changeText(inputs[2], "secret123");
     fireEvent.changeText(inputs[3], "secret123");
     fireEvent.press(screen.getAllByText("Sign up")[1]);
-    await waitFor(() => expect(screen.getByText("Verify email")).toBeTruthy());
-    fireEvent.changeText(screen.UNSAFE_getAllByType(TextInput)[0], "abc-123");
-    fireEvent.press(screen.getByText("Verify email"));
+    await waitFor(() => expect(screen.getAllByText("Unable to authenticate.").length).toBeGreaterThan(0));
 
     screen.unmount();
     (requestPasswordReset as jest.Mock).mockRejectedValueOnce(new Error("reset fail"));
@@ -538,6 +678,7 @@ describe("AuthScreen", () => {
     fireEvent.changeText(inputs[0], "user@example.com");
     fireEvent.changeText(inputs[1], "secret123");
     fireEvent.press(screen.getByText("Forgot password"));
+    await waitFor(() => expect(screen.getAllByText("Unable to request password reset.").length).toBeGreaterThan(0));
 
     screen.unmount();
     (requestPasswordReset as jest.Mock).mockResolvedValueOnce({ status: "sent" });
@@ -547,36 +688,11 @@ describe("AuthScreen", () => {
     fireEvent.changeText(inputs[0], "user@example.com");
     fireEvent.changeText(inputs[1], "secret123");
     fireEvent.press(screen.getByText("Forgot password"));
-    await waitFor(() => expect(screen.getByText("Confirm reset")).toBeTruthy());
+    await waitFor(() => expect(screen.getAllByText("Confirm reset").length).toBeGreaterThan(0));
     const resetInputs = screen.UNSAFE_getAllByType(TextInput);
     fireEvent.changeText(resetInputs[resetInputs.length - 2], "token");
     fireEvent.changeText(resetInputs[resetInputs.length - 1], "new-secret");
-    fireEvent.press(screen.getByText("Confirm reset"));
-
-    screen.unmount();
-    (registerWithEmail as jest.Mock).mockResolvedValueOnce({ verificationToken: "abc-123" });
-    (resendVerification as jest.Mock).mockRejectedValueOnce(new Error("resend fail"));
-    screen = render(<AuthScreen navigation={navigation} route={{} as any} />);
-    fireEvent.press(screen.getByText("Sign up"));
-    inputs = screen.UNSAFE_getAllByType(TextInput);
-    fireEvent.changeText(inputs[0], "Test User");
-    fireEvent.changeText(inputs[1], "new@example.com");
-    fireEvent.changeText(inputs[2], "secret123");
-    fireEvent.changeText(inputs[3], "secret123");
-    fireEvent.press(screen.getAllByText("Sign up")[1]);
-    await waitFor(() => expect(screen.getByText("Resend verification")).toBeTruthy());
-    fireEvent.press(screen.getByText("Resend verification"));
-
-    await waitFor(() => {
-      const calls = alertSpy.mock.calls.map((args) => [String(args[0]), String(args[1])]);
-      expect(calls).toEqual(expect.arrayContaining([
-        ["Auth failed", "Unable to authenticate."],
-        ["Auth failed", "Google sign-in failed."],
-        ["Verify failed", "Verification failed."],
-        ["Reset failed", "Unable to request password reset."],
-        ["Reset failed", "Unable to reset password."],
-        ["Resend failed", "Unable to resend verification."],
-      ]));
-    });
+    fireEvent.press(screen.getAllByText("Confirm reset")[0]);
+    await waitFor(() => expect(screen.getAllByText("Unable to reset password.").length).toBeGreaterThan(0));
   });
 });

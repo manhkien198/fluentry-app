@@ -18,7 +18,7 @@ def test_decode_sso_claims_google_non_jwt_uses_tokeninfo(monkeypatch: pytest.Mon
 
 def test_decode_sso_claims_non_google_non_jwt_raises():
   with pytest.raises(ValueError):
-    sso.decode_sso_claims("apple", "not-a-jwt")
+    sso.decode_sso_claims("github", "not-a-jwt")
 
 
 def test_decode_sso_claims_without_signature_verification(monkeypatch: pytest.MonkeyPatch):
@@ -103,10 +103,9 @@ def test_google_tokeninfo_fallback_http_error_raises(monkeypatch: pytest.MonkeyP
     sso._google_tokeninfo_fallback("token")
 
 
-def test_decode_sso_claims_signature_verify_google_and_apple(monkeypatch: pytest.MonkeyPatch):
+def test_decode_sso_claims_signature_verify_google(monkeypatch: pytest.MonkeyPatch):
   monkeypatch.setattr(sso, "SSO_VERIFY_SIGNATURE", True)
   monkeypatch.setattr(sso, "SSO_GOOGLE_AUDIENCE", "google-aud")
-  monkeypatch.setattr(sso, "SSO_APPLE_AUDIENCE", "apple-aud")
 
   class _Jwk:
     key = "k"
@@ -126,9 +125,7 @@ def test_decode_sso_claims_signature_verify_google_and_apple(monkeypatch: pytest
   monkeypatch.setattr(sso.jwt, "decode", _decode)
 
   g = sso.decode_sso_claims("google", "a.b.c")
-  a = sso.decode_sso_claims("apple", "a.b.c")
   assert g["aud"] == "google-aud"
-  assert a["aud"] == "apple-aud"
 
 
 def test_decode_sso_claims_signature_verify_missing_audience(monkeypatch: pytest.MonkeyPatch):
@@ -136,7 +133,3 @@ def test_decode_sso_claims_signature_verify_missing_audience(monkeypatch: pytest
   monkeypatch.setattr(sso, "SSO_GOOGLE_AUDIENCE", "")
   with pytest.raises(ValueError):
     sso.decode_sso_claims("google", "a.b.c")
-
-  monkeypatch.setattr(sso, "SSO_APPLE_AUDIENCE", "")
-  with pytest.raises(ValueError):
-    sso.decode_sso_claims("apple", "a.b.c")

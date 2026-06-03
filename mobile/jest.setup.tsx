@@ -88,18 +88,18 @@ jest.mock("expo-linear-gradient", () => ({
   LinearGradient: ({ children }: { children?: React.ReactNode }) => children,
 }));
 
-jest.mock("expo-av", () => ({
-  Audio: {
-    requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
-    setAudioModeAsync: jest.fn(async () => undefined),
-    Recording: jest.fn().mockImplementation(() => ({
-      prepareToRecordAsync: jest.fn(async () => undefined),
-      startAsync: jest.fn(async () => undefined),
-      stopAndUnloadAsync: jest.fn(async () => undefined),
-      getURI: jest.fn(() => "file://mock-recording.m4a"),
-    })),
-    RecordingOptionsPresets: {
-      HIGH_QUALITY: {},
-    },
+jest.mock("expo-audio", () => ({
+  AudioModule: {
+    requestRecordingPermissionsAsync: jest.fn(async () => ({ granted: true })),
   },
+  setAudioModeAsync: jest.fn(async () => undefined),
+  RecordingPresets: {
+    HIGH_QUALITY: {},
+  },
+  useAudioRecorder: jest.fn(() => ({
+    prepareToRecordAsync: jest.fn(async () => undefined),
+    record: jest.fn(),
+    stop: jest.fn(async () => undefined),
+    uri: "file://mock-recording.m4a",
+  })),
 }));

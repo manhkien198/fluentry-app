@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from uuid import uuid4
+
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.services.auth_service import create_email_verification_token, create_password_reset_token
+from app.services.auth_service import create_password_reset_token
 
 
 
@@ -15,18 +17,11 @@ def _disable_email_sending(monkeypatch):
 
 
 def _register_and_login(client: TestClient, email: str) -> dict[str, str]:
-    client.post("/auth/register", json={"email": email, "password": "secret123"})
-    verify_token = create_email_verification_token(email)
-    if verify_token:
-        client.post("/auth/verify-email", json={"token": verify_token})
-    else:
-        resend = client.post("/auth/resend-verification", json={"email": email})
-        if resend.status_code != 200:
-            raise RuntimeError("Unable to generate verification token for test account")
-        token = create_email_verification_token(email)
-        client.post("/auth/verify-email", json={"token": token})
-    login = client.post("/auth/login", json={"email": email, "password": "secret123"})
-    token = login.json()["access_token"]
+    local = email.split("@")[0]
+    email = f"{local}.{uuid4().hex}@example.com"
+    register = client.post("/auth/register", json={"email": email, "password": "secret123"})
+    assert register.status_code == 200
+    token = register.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -42,17 +37,9 @@ def test_auth_register_login_and_protected_endpoint(monkeypatch):
 def test_refresh_and_logout_flow(monkeypatch):
     _disable_email_sending(monkeypatch)
     client = TestClient(app)
-    client.post("/auth/register", json={"email": "refresh@example.com", "password": "secret123"})
-    verify_token = create_email_verification_token("refresh@example.com")
-    if verify_token:
-        client.post("/auth/verify-email", json={"token": verify_token})
-    else:
-        resend = client.post("/auth/resend-verification", json={"email": "refresh@example.com"})
-        if resend.status_code == 200:
-            client.post("/auth/verify-email", json={"token": resend.json().get("token", "")})
-    login = client.post("/auth/login", json={"email": "refresh@example.com", "password": "secret123"})
-    assert login.status_code == 200
-    refresh_token = login.json()["refresh_token"]
+    register = client.post("/auth/register", json={"email": f"refresh.{uuid4().hex}@example.com", "password": "secret123"})
+    assert register.status_code == 200
+    refresh_token = register.json()["refresh_token"]
 
     refreshed = client.post("/auth/refresh", json={"refresh_token": refresh_token})
     assert refreshed.status_code == 200
@@ -99,7 +86,7 @@ def test_sso_login_rejects_missing_email():
 
 def test_sso_login_unsupported_provider():
     client = TestClient(app)
-    response = client.post("/auth/sso", json={"provider": "github", "id_token": "x.y.z"})
+    response = client.post("/auth/sso", json={"provider": "apple", "id_token": "x.y.z"})
     assert response.status_code == 400
 
 
@@ -131,7 +118,7 @@ def test_cross_user_session_access_is_forbidden(monkeypatch):
 def test_forgot_password_always_returns_sent(monkeypatch):
     _disable_email_sending(monkeypatch)
     client = TestClient(app)
-    existing_email = "forgot1@example.com"
+    existing_email = f"forgot1.{uuid4().hex}@example.com"
     client.post("/auth/register", json={"email": existing_email, "password": "secret123"})
 
     existing = client.post("/auth/forgot-password", json={"email": existing_email})
@@ -146,7 +133,7 @@ def test_forgot_password_always_returns_sent(monkeypatch):
 def test_reset_password_success_and_login_with_new_password(monkeypatch):
     _disable_email_sending(monkeypatch)
     client = TestClient(app)
-    email = "reset1@example.com"
+    email = f"reset1.{uuid4().hex}@example.com"
     old_password = "secret123"
     new_password = "newsecret123"
 
@@ -160,10 +147,6 @@ def test_reset_password_success_and_login_with_new_password(monkeypatch):
 
     old_login = client.post("/auth/login", json={"email": email, "password": old_password})
     assert old_login.status_code == 401
-
-    verify_token = create_email_verification_token(email)
-    if verify_token:
-        client.post("/auth/verify-email", json={"token": verify_token})
 
     new_login = client.post("/auth/login", json={"email": email, "password": new_password})
     assert new_login.status_code == 200
@@ -210,7 +193,7 @@ def test_reset_password_rejects_short_password():
 def test_reset_password_expired_token_fails(monkeypatch):
     _disable_email_sending(monkeypatch)
     client = TestClient(app)
-    email = "reset-expired@example.com"
+    email = f"reset-expired.{uuid4().hex}@example.com"
     client.post("/auth/register", json={"email": email, "password": "secret123"})
     token = create_password_reset_token(email)
     assert token
@@ -231,7 +214,7 @@ def test_reset_password_expired_token_fails(monkeypatch):
 def test_reset_password_token_is_single_use(monkeypatch):
     _disable_email_sending(monkeypatch)
     client = TestClient(app)
-    email = "reset-single@example.com"
+    email = f"reset-single.{uuid4().hex}@example.com"
     client.post("/auth/register", json={"email": email, "password": "secret123"})
     token = create_password_reset_token(email)
     assert token

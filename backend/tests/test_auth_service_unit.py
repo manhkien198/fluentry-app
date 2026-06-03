@@ -270,6 +270,7 @@ def test_create_user_success(monkeypatch):
     monkeypatch.setattr(svc, "uuid4", lambda: "x")
     out = svc.create_user("a@example.com", "p", "n")
     assert out.email == "a@example.com"
+    assert out.email_verified == "true"
     assert len(db.added) == 1
 
 

@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "ios": {
+      "bundleIdentifier": "com.manhkien198.mobile",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
+    },
+    "android": {
+      "usesCleartextTraffic": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ca3ae1db-fc60-40a1-a683-004cb4791742"
+      }
+    },
+    "owner": "manhkien198"
+  }
+}

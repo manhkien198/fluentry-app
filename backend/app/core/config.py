@@ -27,8 +27,6 @@ METRICS_TOKEN = os.getenv("METRICS_TOKEN", "")
 SSO_VERIFY_SIGNATURE = os.getenv("SSO_VERIFY_SIGNATURE", "false").lower() == "true"
 SSO_GOOGLE_ISSUER = os.getenv("SSO_GOOGLE_ISSUER", "https://accounts.google.com")
 SSO_GOOGLE_AUDIENCE = os.getenv("SSO_GOOGLE_AUDIENCE", "")
-SSO_APPLE_ISSUER = os.getenv("SSO_APPLE_ISSUER", "https://appleid.apple.com")
-SSO_APPLE_AUDIENCE = os.getenv("SSO_APPLE_AUDIENCE", "")
 SMTP_HOST = os.getenv("SMTP_HOST", "")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER", "")
@@ -59,5 +57,3 @@ if APP_ENV in {"production", "prod"} and not METRICS_TOKEN:
 if APP_ENV in {"production", "prod"} and SSO_VERIFY_SIGNATURE and not SSO_GOOGLE_AUDIENCE:
     raise RuntimeError("SSO_GOOGLE_AUDIENCE is required in production when signature verification is enabled.")
 
-if APP_ENV in {"production", "prod"} and SSO_VERIFY_SIGNATURE and not SSO_APPLE_AUDIENCE:
-    raise RuntimeError("SSO_APPLE_AUDIENCE is required in production when signature verification is enabled.")

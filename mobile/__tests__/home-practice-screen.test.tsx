@@ -47,21 +47,18 @@ jest.mock("../src/shared/api", () => ({
   classifyNetworkIssue: jest.fn(() => "unknown"),
 }));
 
-jest.mock("expo-av", () => ({
-  Audio: {
-    requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
-    setAudioModeAsync: jest.fn(async () => undefined),
-    Recording: class {
-      uri = "file:///tmp/audio.m4a";
-      async prepareToRecordAsync() {}
-      async startAsync() {}
-      async stopAndUnloadAsync() {}
-      getURI() {
-        return this.uri;
-      }
-    },
-    RecordingOptionsPresets: { HIGH_QUALITY: {} },
+jest.mock("expo-audio", () => ({
+  AudioModule: {
+    requestRecordingPermissionsAsync: jest.fn(async () => ({ granted: true })),
   },
+  setAudioModeAsync: jest.fn(async () => undefined),
+  RecordingPresets: { HIGH_QUALITY: {} },
+  useAudioRecorder: jest.fn(() => ({
+    prepareToRecordAsync: jest.fn(async () => undefined),
+    record: jest.fn(),
+    stop: jest.fn(async () => undefined),
+    uri: "file:///tmp/audio.m4a",
+  })),
 }));
 
 jest.mock("../src/shared/haptics", () => ({
@@ -83,7 +80,7 @@ import {
   requestPracticeScore,
   uploadPracticeAudio,
 } from "../src/shared/api";
-import { Audio } from "expo-av";
+import { AudioModule, setAudioModeAsync, useAudioRecorder } from "expo-audio";
 import { showToast } from "../src/shared/toast";
 import { haptic } from "../src/shared/haptics";
 
@@ -279,7 +276,7 @@ describe("PracticeScreen", () => {
   });
 
   it("shows mic permission error when permission denied", async () => {
-    (Audio.requestPermissionsAsync as jest.Mock).mockResolvedValueOnce({ granted: false });
+    (AudioModule.requestRecordingPermissionsAsync as jest.Mock).mockResolvedValueOnce({ granted: false });
 
     const navigation = { replace: jest.fn() } as any;
     const route = { params: { lessonId: "lesson-1", prompt: "hello world" } } as any;
@@ -293,7 +290,7 @@ describe("PracticeScreen", () => {
   });
 
   it("shows record error on recorder failure", async () => {
-    (Audio.setAudioModeAsync as jest.Mock).mockRejectedValueOnce(new Error("audio mode failed"));
+    (setAudioModeAsync as jest.Mock).mockRejectedValueOnce(new Error("audio mode failed"));
 
     const navigation = { replace: jest.fn() } as any;
     const route = { params: { lessonId: "lesson-1", prompt: "hello world" } } as any;

@@ -63,17 +63,13 @@ describe("SettingsScreen", () => {
 
     (appConfig as any).googleWebClientId = "";
     (appConfig as any).googleExpoClientId = "";
-    (appConfig as any).appleServiceId = "";
     let screen = render(<SettingsScreen navigation={navigation} />);
     expect(screen.getByText(/Google configured: No/i)).toBeTruthy();
-    expect(screen.getByText(/Apple service id: Missing/i)).toBeTruthy();
 
     screen.unmount();
     (appConfig as any).googleWebClientId = "web-id";
-    (appConfig as any).appleServiceId = "apple-id";
     screen = render(<SettingsScreen navigation={navigation} />);
     expect(screen.getByText(/Google configured: Yes/i)).toBeTruthy();
-    expect(screen.getByText(/Apple service id: Set/i)).toBeTruthy();
   });
 
   it("signs out and navigates to Auth", async () => {

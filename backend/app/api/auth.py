@@ -5,8 +5,8 @@ from app.core.config import APP_ENV
 from app.schemas.auth import AuthRequest, AuthResponse, ForgotPasswordRequest, RefreshRequest, ResendVerificationRequest, ResetPasswordRequest, SSORequest, UserProfile, VerifyEmailRequest
 from app.services.auth_service import (
     authenticate_user,
-    create_email_verification_token,
     create_access_token,
+    create_email_verification_token,
     create_password_reset_token,
     create_refresh_token,
     create_user,
@@ -16,6 +16,7 @@ from app.services.auth_service import (
     rotate_refresh_token,
     verify_email_token,
 )
+from app.services.db import SessionLocal, UserRecord
 from app.services.rate_limit import allow_request
 from app.services.runtime_metrics import inc
 from app.services.sso_service import decode_sso_claims
@@ -33,9 +34,6 @@ def login(payload: AuthRequest) -> AuthResponse:
     if user is None:
         inc("auth.login.failed")
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    if user.email_verified != "true":
-        inc("auth.login.unverified")
-        raise HTTPException(status_code=403, detail="Email not verified")
     inc("auth.login.success")
     token = create_access_token(user.id, user.email)
     refresh_token = create_refresh_token(user.id)
@@ -46,8 +44,8 @@ def login(payload: AuthRequest) -> AuthResponse:
     )
 
 
-@router.post("/register")
-def register(payload: AuthRequest) -> dict[str, str]:
+@router.post("/register", response_model=AuthResponse)
+def register(payload: AuthRequest) -> AuthResponse:
     if not allow_request(f"auth-register:{payload.email}", limit=5, window_seconds=60):
         inc("auth.register.ratelimited")
         raise HTTPException(status_code=429, detail="Too many register attempts")
@@ -57,11 +55,13 @@ def register(payload: AuthRequest) -> dict[str, str]:
         inc("auth.register.failed")
         raise HTTPException(status_code=400, detail=str(exc))
     inc("auth.register.success")
-    verify_token = create_email_verification_token(user.email)
-    if not verify_token:
-        raise HTTPException(status_code=500, detail="Unable to create verification token")
-    send_verification_email(user.email, verify_token)
-    return {"status": "verification_sent"}
+    access_token = create_access_token(user.id, user.email)
+    refresh_token = create_refresh_token(user.id)
+    return AuthResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user=UserProfile(id=user.id, email=user.email, display_name=user.display_name),
+    )
 
 
 @router.post("/refresh", response_model=AuthResponse)
@@ -135,7 +135,7 @@ def reset_password(payload: ResetPasswordRequest) -> dict[str, str]:
 @router.post("/sso", response_model=AuthResponse)
 def sso_login(payload: SSORequest) -> AuthResponse:
     provider = payload.provider.strip().lower()
-    if provider not in {"google", "apple"}:
+    if provider != "google":
         inc("auth.sso.failed")
         raise HTTPException(status_code=400, detail="Unsupported SSO provider")
     if not allow_request(f"auth-sso:{provider}", limit=20, window_seconds=60):

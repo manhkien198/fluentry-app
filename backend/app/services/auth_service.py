@@ -63,7 +63,7 @@ def create_user(email: str, password: str, display_name: str) -> UserRecord:
             email=email,
             password_hash=hash_password(password),
             display_name=display_name,
-            email_verified="false",
+            email_verified="true",
         )
         db.add(user)
         db.commit()

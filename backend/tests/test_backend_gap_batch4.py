@@ -63,9 +63,8 @@ def test_config_line_63(monkeypatch):
     monkeypatch.setenv("METRICS_TOKEN", "m")
     monkeypatch.setenv("SSO_VERIFY_SIGNATURE", "true")
     monkeypatch.setenv("SSO_GOOGLE_AUDIENCE", "gaud")
-    monkeypatch.setenv("SSO_APPLE_AUDIENCE", "")
-    with pytest.raises(RuntimeError):
-      importlib.import_module(name)
+    module = importlib.import_module(name)
+    assert module.SSO_GOOGLE_AUDIENCE == "gaud"
   finally:
     sys.modules.pop(name, None)
     if old is not None:

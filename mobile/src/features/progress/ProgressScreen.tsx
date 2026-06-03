@@ -8,6 +8,7 @@ import { useAppColors } from "../../shared/useAppColors";
 import { t } from "../../shared/i18n";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
+import { radius, spacing } from "../../shared/theme";
 import type { AppColors } from "../../shared/theme";
 
 type ProgressState = {
@@ -75,10 +76,7 @@ export function ProgressScreen({
     };
   }, []);
 
-  const sounds = useMemo(
-    () => state.weak_sounds.slice(0, 3),
-    [state.weak_sounds],
-  );
+  const sounds = useMemo(() => state.weak_sounds.slice(0, 3), [state.weak_sounds]);
 
   return (
     <Screen>
@@ -111,10 +109,7 @@ export function ProgressScreen({
             label={t("progress.pronunciation")}
             value={state.pronunciation_score}
           />
-          <MetricBar
-            label={t("progress.fluency")}
-            value={state.fluency_score}
-          />
+          <MetricBar label={t("progress.fluency")} value={state.fluency_score} />
           <MetricBar
             label={t("progress.confidence")}
             value={state.confidence_score}
@@ -133,20 +128,25 @@ export function ProgressScreen({
         </Card.Content>
       </SectionCard>
 
-      <Button
-        mode="outlined"
-        textColor={colors.text}
-        onPress={() => navigation.navigate("History")}
-      >
-        View history
-      </Button>
-      <Button
-        mode="text"
-        textColor={colors.primary}
-        onPress={() => navigation.navigate("Trends")}
-      >
-        View trends
-      </Button>
+      <View style={s.actionRow}>
+        <Button
+          mode="outlined"
+          textColor={colors.text}
+          contentStyle={s.actionButton}
+          onPress={() => navigation.navigate("History")}
+        >
+          View history
+        </Button>
+        <Button
+          mode="contained"
+          buttonColor={colors.primary}
+          textColor="#04111F"
+          contentStyle={s.actionButton}
+          onPress={() => navigation.navigate("Trends")}
+        >
+          View trends
+        </Button>
+      </View>
     </Screen>
   );
 }
@@ -155,10 +155,12 @@ const styles = (colors: AppColors) =>
   StyleSheet.create({
     summary: { gap: 14 },
     title: { color: colors.text, fontSize: 24, fontWeight: "800" },
-    pillRow: { flexDirection: "row", gap: 10 },
+    pillRow: { flexDirection: "row", gap: 10, flexWrap: "wrap" },
     block: { gap: 14 },
-    sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "700" },
+    sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "800" },
     line: { color: colors.muted, fontSize: 15, lineHeight: 22 },
+    actionRow: { flexDirection: "row", gap: 10 },
+    actionButton: { height: 52 },
     loadingBlock: { minHeight: 70, justifyContent: "center" },
     loadingText: { color: colors.muted, fontSize: 14 },
   });

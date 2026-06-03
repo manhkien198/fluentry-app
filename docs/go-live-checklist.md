@@ -17,9 +17,7 @@
 - [ ] `JWT_SECRET` is set and length is at least 32 characters
 - [ ] `METRICS_TOKEN` is set (do not expose `/metrics` without token/network controls)
 - [ ] `SEED_CONTENT_ENABLED=false` (avoid auto-seeding lesson/drill demo content in production)
-- [ ] If `SSO_VERIFY_SIGNATURE=true`, set:
-  - [ ] `SSO_GOOGLE_AUDIENCE`
-  - [ ] `SSO_APPLE_AUDIENCE`
+- [ ] If `SSO_VERIFY_SIGNATURE=true`, set `SSO_GOOGLE_AUDIENCE`
 
 ## 3) Runtime hardening
 - [ ] `/health` and `/ready` endpoints monitored

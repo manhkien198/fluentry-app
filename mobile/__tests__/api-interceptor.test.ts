@@ -16,14 +16,15 @@ describe("shared/api interceptor", () => {
     jest.restoreAllMocks();
   });
 
-  it("refreshes on 401 and retries request with new token", async () => {
+  it("refreshes on 401, saves new refresh token, and retries request with new token", async () => {
     jest.spyOn(axios, "isAxiosError").mockReturnValue(true);
     jest
       .spyOn(axios, "post")
-      .mockResolvedValueOnce({ data: { access_token: "new-access" } } as any);
+      .mockResolvedValueOnce({ data: { access_token: "new-access", refresh_token: "new-refresh" } } as any);
 
     const { api } = require("../src/shared/api");
     const { useAppStore } = require("../src/shared/store");
+    const authStorage = require("../src/shared/authStorage");
     useAppStore.getState().setAccessToken("old");
 
     const requestSpy = jest
@@ -43,7 +44,9 @@ describe("shared/api interceptor", () => {
     expect(requestSpy).toHaveBeenCalledTimes(1);
     const calledConfig = requestSpy.mock.calls[0][0] as { headers?: Record<string, string> };
     expect(calledConfig.headers?.Authorization).toBe("Bearer new-access");
+    expect(authStorage.saveRefreshToken).toHaveBeenCalledWith("new-refresh");
   });
+
 
   it("rejects when refresh token is missing", async () => {
     jest.spyOn(axios, "isAxiosError").mockReturnValue(true);
@@ -85,6 +88,33 @@ describe("shared/api interceptor", () => {
     await expect(rejected(err)).rejects.toBeTruthy();
     expect(authStorage.clearAuthTokens).toHaveBeenCalled();
     expect(clearSessionSpy).toHaveBeenCalled();
+  });
+
+  it("expires session after repeated retryable refresh failures", async () => {
+    jest.spyOn(axios, "isAxiosError").mockImplementation((error: any) => Boolean(error?.isAxiosError));
+    const timeoutError: any = new Error("timeout");
+    timeoutError.isAxiosError = true;
+    timeoutError.code = "ECONNABORTED";
+    jest.spyOn(axios, "post").mockRejectedValue(timeoutError);
+
+    const { api } = require("../src/shared/api");
+    const { useAppStore } = require("../src/shared/store");
+    const rejected = (api as any).interceptors.response.handlers[0].rejected;
+
+    const error = { config: { headers: {} }, response: { status: 401 }, isAxiosError: true };
+    await expect(rejected(error)).rejects.toBeTruthy();
+    expect(useAppStore.getState().authStatus).toBe("expired");
+  });
+
+  it("rejects when refresh response has no access token", async () => {
+    jest.spyOn(axios, "isAxiosError").mockReturnValue(true);
+    jest.spyOn(axios, "post").mockResolvedValueOnce({ data: {} } as any);
+
+    const { api } = require("../src/shared/api");
+    const rejected = (api as any).interceptors.response.handlers[0].rejected;
+    const error = { config: { headers: {} }, response: { status: 401 }, isAxiosError: true };
+
+    await expect(rejected(error)).rejects.toBeTruthy();
   });
 
   it("passes through non-401 errors", async () => {

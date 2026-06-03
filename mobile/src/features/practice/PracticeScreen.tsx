@@ -1,8 +1,13 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import { Animated, Platform, StyleSheet, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { ActivityIndicator, Button, Card, Text } from "react-native-paper";
-import { Audio } from "expo-av";
+import { ActivityIndicator, Button, Text } from "react-native-paper";
+import {
+  AudioModule,
+  RecordingPresets,
+  setAudioModeAsync,
+  useAudioRecorder,
+} from "expo-audio";
 import { RootStackParamList } from "../../navigation/types";
 import { haptic } from "../../shared/haptics";
 import { showToast } from "../../shared/toast";
@@ -65,18 +70,19 @@ export function PracticeScreen({
 }: NativeStackScreenProps<RootStackParamList, "Practice">) {
   const colors = useAppColors();
   const fade = useMemo(() => new Animated.Value(0), []);
+  const canUseNativeDriver = Platform.OS !== "web";
   React.useEffect(() => {
     Animated.timing(fade, {
       toValue: 1,
       duration: 260,
-      useNativeDriver: true,
+      useNativeDriver: canUseNativeDriver,
     }).start();
-  }, [fade]);
+  }, [fade, canUseNativeDriver]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [audioUri, setAudioUri] = useState<string | null>(null);
+  const recording = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitStage, setSubmitStage] = useState<
     "idle" | "creating" | "uploading" | "scoring" | "polling"
@@ -95,35 +101,29 @@ export function PracticeScreen({
     setErrorMessage(null);
     try {
       if (!isRecording) {
-        const perm = await Audio.requestPermissionsAsync();
+        const perm = await AudioModule.requestRecordingPermissionsAsync();
         if (!perm.granted) {
           setErrorMessage(t("practice.mic_permission"));
           return;
         }
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: true,
-          playsInSilentModeIOS: true,
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          allowsRecording: true,
         });
-        const rec = new Audio.Recording();
-        await rec.prepareToRecordAsync(
-          Audio.RecordingOptionsPresets.HIGH_QUALITY,
-        );
-        await rec.startAsync();
-        setRecording(rec);
+        await recording.prepareToRecordAsync();
+        recording.record();
         setIsRecording(true);
         return;
       }
 
       if (recording) {
-        await recording.stopAndUnloadAsync();
-        const uri = recording.getURI();
-        setAudioUri(uri ?? null);
+        await recording.stop();
+        setAudioUri(recording.uri ?? null);
       }
     } catch {
       setErrorMessage(t("practice.record_error"));
     } finally {
       setIsRecording(false);
-      setRecording(null);
     }
   };
 
@@ -179,17 +179,17 @@ export function PracticeScreen({
 
   return (
     <Screen>
-      <Animated.View style={{ flex: 1, opacity: fade, gap: 14 }}>
+      <Animated.View style={{ flex: 1, opacity: fade, gap: 16 }}>
         <SectionCard>
-          <Card.Content style={s.block}>
-            <Text style={s.label}>{t("practice.say_sentence")}</Text>
+          <View style={s.block}>
+            <Text style={s.label}>{t("practice.step")}</Text>
             <Text style={s.prompt}>{route.params.prompt}</Text>
             <Text style={s.helper}>{t("practice.helper")}</Text>
-          </Card.Content>
+          </View>
         </SectionCard>
 
         <SectionCard>
-          <Card.Content style={s.block}>
+          <View style={s.block}>
             <Text style={s.label}>{t("practice.live_waveform")}</Text>
             <View style={s.waveform}>
               {bars.map((height, index) => (
@@ -211,6 +211,7 @@ export function PracticeScreen({
               mode={isRecording ? "contained" : "outlined"}
               buttonColor={isRecording ? colors.danger : undefined}
               textColor={colors.text}
+              contentStyle={{ height: 50 }}
               onPress={toggleRecording}
             >
               {isRecording
@@ -222,49 +223,52 @@ export function PracticeScreen({
             {audioUri ? (
               <Text style={s.audioReady}>{t("practice.audio_ready")}</Text>
             ) : null}
-          </Card.Content>
+          </View>
         </SectionCard>
 
-        <View style={s.ctaWrap}>
-          <Button
-            mode="contained"
-            buttonColor={colors.primary}
-            textColor="#04111F"
-            disabled={isSubmitting}
-            onPress={handleSubmit}
-          >
-            {isSubmitting ? "Scoring..." : "Get pronunciation score"}
-          </Button>
-          {isSubmitting ? <ActivityIndicator color={colors.primary} /> : null}
-          {isSubmitting ? (
-            <Text style={s.helper}>
-              {t("practice.step_label", { value: submitStage })}
-            </Text>
-          ) : null}
-          {errorMessage ? <Text style={s.error}>{errorMessage}</Text> : null}
-          {isSubmitting ? (
+        <SectionCard>
+          <View style={s.ctaWrap}>
             <Button
-              mode="text"
-              textColor={colors.text}
-              onPress={() => {
-                pollCancelledRef.current = true;
-                setIsSubmitting(false);
-                setSubmitStage("idle");
-              }}
-            >
-              Cancel
-            </Button>
-          ) : null}
-          {errorMessage ? (
-            <Button
-              mode="outlined"
-              textColor={colors.text}
+              mode="contained"
+              buttonColor={colors.primary}
+              textColor="#04111F"
+              disabled={isSubmitting}
+              contentStyle={{ height: 52 }}
               onPress={handleSubmit}
             >
-              Retry scoring
+              {isSubmitting ? "Scoring..." : "Get pronunciation score"}
             </Button>
-          ) : null}
-        </View>
+            {isSubmitting ? <ActivityIndicator color={colors.primary} /> : null}
+            {isSubmitting ? (
+              <Text style={s.helper}>
+                {t("practice.step_label", { value: submitStage })}
+              </Text>
+            ) : null}
+            {errorMessage ? <Text style={s.error}>{errorMessage}</Text> : null}
+            {isSubmitting ? (
+              <Button
+                mode="text"
+                textColor={colors.text}
+                onPress={() => {
+                  pollCancelledRef.current = true;
+                  setIsSubmitting(false);
+                  setSubmitStage("idle");
+                }}
+              >
+                Cancel
+              </Button>
+            ) : null}
+            {errorMessage ? (
+              <Button
+                mode="outlined"
+                textColor={colors.text}
+                onPress={handleSubmit}
+              >
+                Retry scoring
+              </Button>
+            ) : null}
+          </View>
+        </SectionCard>
       </Animated.View>
     </Screen>
   );
@@ -273,23 +277,29 @@ export function PracticeScreen({
 const styles = (colors: AppColors) =>
   StyleSheet.create({
     block: { gap: 14 },
-    label: { color: colors.primary, fontSize: 13, fontWeight: "800" },
+    label: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: "800",
+      letterSpacing: 0.5,
+    },
     prompt: {
       color: colors.text,
       fontSize: 28,
       lineHeight: 38,
-      fontWeight: "700",
+      fontWeight: "800",
     },
     helper: { color: colors.muted, fontSize: 15, lineHeight: 22 },
     waveform: {
-      height: 72,
+      height: 84,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
       gap: 6,
+      paddingVertical: 6,
     },
     waveBar: { width: 8, borderRadius: 999 },
-    audioReady: { color: colors.success, fontSize: 13 },
+    audioReady: { color: colors.success, fontSize: 13, fontWeight: "700" },
     error: { color: colors.danger, textAlign: "center" },
-    ctaWrap: { gap: 8, marginTop: 6, paddingBottom: 8 },
+    ctaWrap: { gap: 10, marginTop: 2, paddingBottom: 4 },
   });
